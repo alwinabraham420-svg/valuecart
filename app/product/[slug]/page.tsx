@@ -5,6 +5,8 @@ import { PRODUCTS } from '@/data/products';
 import { getProductBySlug } from '@/lib/supabase/products';
 import ProductDetailClient from '@/components/ProductDetailClient';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: {

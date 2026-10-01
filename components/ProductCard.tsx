@@ -42,7 +42,7 @@ export default function ProductCard({ product, className = '' }: ProductCardProp
       {/* Product Image Area */}
       <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#F8F9FA] mb-3">
         {/* Stock / Discount Badge (Top Left) */}
-        {product.slug !== 'stainless-steel-chopping-board' || product.stock <= 0 ? (
+        {product.isAvailable === false || (product.stock !== undefined && product.stock <= 0 && product.slug !== 'stainless-steel-chopping-board') ? (
           <div className="absolute top-2 left-2 z-10 bg-gray-700/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
             Restock Soon
           </div>
@@ -120,8 +120,8 @@ export default function ProductCard({ product, className = '' }: ProductCardProp
           </div>
         </div>
 
-        {/* Action Button: Live only for chopping board */}
-        {product.slug === 'stainless-steel-chopping-board' && product.stock > 0 ? (
+        {/* Action Button */}
+        {product.isAvailable !== false && (product.stock === undefined || product.stock > 0 || product.slug === 'stainless-steel-chopping-board') ? (
           <button
             type="button"
             onClick={handleAddToCart}

@@ -53,6 +53,9 @@ export default function ProductDetailClient({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
+  const isOutOfStock =
+    product.isAvailable === false ||
+    (typeof product.stock === 'number' && product.stock <= 0 && product.slug !== 'stainless-steel-chopping-board');
   const images = product.images && product.images.length > 0 ? product.images : [product.image];
   const isWishlisted = isInWishlist(product.id);
 
@@ -329,9 +332,9 @@ export default function ProductDetailClient({
             {/* Rating & Stock Status */}
             <div className="flex items-center gap-3 mt-3 text-xs sm:text-sm">
               <span className={`font-semibold flex items-center gap-1 px-2.5 py-0.5 rounded-md ${
-                product.stock > 0 ? 'text-valuecart-green bg-valuecart-green-tint' : 'text-gray-600 bg-gray-100'
+                !isOutOfStock ? 'text-valuecart-green bg-valuecart-green-tint' : 'text-gray-600 bg-gray-100'
               }`}>
-                <Check className="w-4 h-4 stroke-[2.5]" /> {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                <Check className="w-4 h-4 stroke-[2.5]" /> {!isOutOfStock ? 'In Stock' : 'Out of Stock'}
               </span>
               <span className="text-gray-300">•</span>
               <span className="text-valuecart-text-muted font-medium">
@@ -421,7 +424,7 @@ export default function ProductDetailClient({
             </div>
 
             {/* Primary Action Buttons: ADD TO CART & BUY NOW */}
-            {product.stock <= 0 || product.isAvailable === false ? (
+            {isOutOfStock ? (
               <div className="mt-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center">
                 <span className="font-bold text-amber-800 text-sm sm:text-base block">
                   Out of Stock • Restock Soon
@@ -745,7 +748,7 @@ export default function ProductDetailClient({
         </div>
 
         <div className="flex items-center gap-2 flex-1 max-w-[240px]">
-          {product.stock <= 0 || product.isAvailable === false ? (
+          {isOutOfStock ? (
             <span className="flex-1 text-center py-2.5 px-3 rounded-xl bg-amber-50 text-amber-800 font-bold text-xs border border-amber-200">
               Restock Soon
             </span>

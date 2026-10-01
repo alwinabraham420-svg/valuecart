@@ -109,8 +109,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToCart = (product: Product, quantity = 1, selectedSize?: string, selectedColor?: string) => {
-    // Only allow live selling product
-    if (product.slug !== 'stainless-steel-chopping-board' || product.stock <= 0) {
+    // Verify product is in stock and available
+    const inStock = product.isAvailable !== false && (product.stock === undefined || product.stock > 0 || product.slug === 'stainless-steel-chopping-board');
+    if (!inStock) {
       addToast('Product Unavailable', 'This product is currently out of stock or restocking soon.', 'warning');
       return;
     }

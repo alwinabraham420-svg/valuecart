@@ -70,7 +70,7 @@ function LoginContent() {
       setSubmitting(false);
 
       if (res.error) {
-        setErrorMsg('Invalid email or password. Please check your credentials.');
+        setErrorMsg(res.error.message || 'Invalid email or password. Please check your credentials.');
       } else {
         setSuccessMsg('Signed in successfully! Redirecting...');
         setTimeout(() => {
