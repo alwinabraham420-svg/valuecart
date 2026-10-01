@@ -421,7 +421,7 @@ export default function ProductDetailClient({
             </div>
 
             {/* Primary Action Buttons: ADD TO CART & BUY NOW */}
-            {product.stock <= 0 || !product.isAvailable ? (
+            {product.stock <= 0 || product.isAvailable === false ? (
               <div className="mt-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center">
                 <span className="font-bold text-amber-800 text-sm sm:text-base block">
                   Out of Stock • Restock Soon
@@ -745,7 +745,7 @@ export default function ProductDetailClient({
         </div>
 
         <div className="flex items-center gap-2 flex-1 max-w-[240px]">
-          {product.stock <= 0 || !product.isAvailable ? (
+          {product.stock <= 0 || product.isAvailable === false ? (
             <span className="flex-1 text-center py-2.5 px-3 rounded-xl bg-amber-50 text-amber-800 font-bold text-xs border border-amber-200">
               Restock Soon
             </span>

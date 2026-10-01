@@ -23,6 +23,7 @@ export const PRODUCTS: Product[] = [
     description:
       'A medium-size stainless steel chopping board designed for everyday kitchen use. Crafted from food-safe 304 stainless steel, it features a hygienic, non-porous cutting surface that does not harbor bacteria, absorb odors, or release microplastics into your food. Engineered for multi-purpose kitchen prep with a convenient hanging handle and smooth rounded edges for safe, comfortable use.',
     stock: 120,
+    isAvailable: true,
     featured: true,
     bestSeller: true,
     deal: true,
