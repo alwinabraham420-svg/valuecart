@@ -27,7 +27,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<AuthResponse>;
-  resendConfirmationEmail: (email: string) => Promise<AuthResponse>;
   updatePassword: (newPassword: string) => Promise<AuthResponse>;
   refreshProfile: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -70,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Profile not found in public.users; attempt to create it
         const { data: inserted, error: insertError } = await supabase
           .from('users')
-          .upsert([fallbackProfile])
+          .upsert([fallbackProfile], { onConflict: 'id' })
           .select()
           .maybeSingle();
 
@@ -172,7 +171,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { data: null, error };
     }
 
-    // If session is returned immediately (email confirmation disabled in Supabase)
+    // Anti-enumeration check: if an account already exists with this email,
+    // Supabase returns a user with empty identities array
+    if (data.user?.identities && data.user.identities.length === 0) {
+      return {
+        data,
+        error: new Error('An account with this email already exists. Please sign in instead.'),
+      };
+    }
+
+    // If session is returned immediately (Confirm email disabled in Supabase)
     if (data.session && data.user) {
       setSession(data.session);
       setUser(data.user);
@@ -180,6 +188,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         full_name: cleanName,
         phone: cleanPhone,
       });
+      return { data, error: null };
+    }
+
+    // If Supabase created user but didn't attach session, attempt immediate automatic login
+    const loginRes = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
+
+    if (loginRes.data?.session && loginRes.data?.user) {
+      setSession(loginRes.data.session);
+      setUser(loginRes.data.user);
+      await fetchProfile(loginRes.data.user.id, cleanEmail, {
+        full_name: cleanName,
+        phone: cleanPhone,
+      });
+      return { data: loginRes.data, error: null };
+    }
+
+    if (loginRes.error) {
+      return { data, error: loginRes.error };
     }
 
     return { data, error: null };
@@ -239,20 +268,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { data, error };
   };
 
-  const resendConfirmationEmail = async (email: string): Promise<AuthResponse> => {
-    if (!supabase) {
-      return { data: null, error: new Error('Supabase client not initialized') };
-    }
-
-    const cleanEmail = email.trim().toLowerCase();
-    const { data, error } = await supabase.auth.resend({
-      type: 'signup',
-      email: cleanEmail,
-    });
-
-    return { data, error };
-  };
-
   const updatePassword = async (newPassword: string): Promise<AuthResponse> => {
     if (!supabase) {
       return { data: null, error: new Error('Supabase client not initialized') };
@@ -305,7 +320,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         resetPasswordForEmail,
-        resendConfirmationEmail,
         updatePassword,
         refreshProfile,
         refreshSession,

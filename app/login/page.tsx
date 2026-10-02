@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, Mail, User, Phone, Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Lock, Mail, User, Phone, Eye, EyeOff, ShieldCheck, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 function LoginContent() {
@@ -11,7 +11,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/account';
 
-  const { user, signIn, signUp, resendConfirmationEmail, loading: authLoading } = useAuth();
+  const { user, signIn, signUp, loading: authLoading } = useAuth();
 
   const initialMode =
     searchParams.get('tab') === 'signup' || searchParams.get('mode') === 'signup'
@@ -30,23 +30,11 @@ function LoginContent() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Special states
+  // Existing account alert with convenient Sign In CTA
   const [showExistingAccountOptions, setShowExistingAccountOptions] = useState(false);
-  const [awaitingConfirmationEmail, setAwaitingConfirmationEmail] = useState<string | null>(null);
-  const [resendCooldown, setResendCooldown] = useState(0);
-  const [resending, setResending] = useState(false);
 
-  // Synchronous lock to prevent double clicks / concurrent requests
+  // Synchronous lock to prevent double clicks / rapid repeated requests
   const isSubmittingRef = useRef(false);
-
-  // Cooldown countdown timer
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = setInterval(() => {
-      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [resendCooldown]);
 
   // If user is already logged in, redirect
   useEffect(() => {
@@ -54,37 +42,6 @@ function LoginContent() {
       router.replace(redirectPath);
     }
   }, [user, authLoading, redirectPath, router]);
-
-  const handleResendConfirmation = async (targetEmail?: string) => {
-    const emailToResend = (targetEmail || awaitingConfirmationEmail || email).trim().toLowerCase();
-    if (!emailToResend || resendCooldown > 0 || resending) return;
-
-    setResending(true);
-    setErrorMsg('');
-
-    try {
-      const res = await resendConfirmationEmail(emailToResend);
-
-      if (res.error) {
-        const errMsg = res.error.message || '';
-        const status = (res.error as any).status;
-        const code = (res.error as any).code;
-
-        if (status === 429 || code === 'over_email_send_rate_limit' || errMsg.includes('rate limit') || errMsg.includes('seconds')) {
-          setErrorMsg('Too many email requests. Please wait a few minutes before trying again.');
-        } else {
-          setErrorMsg('Failed to resend confirmation email. Please try again later.');
-        }
-      } else {
-        setSuccessMsg(`Confirmation email re-sent to ${emailToResend}. Please check your inbox and spam folder.`);
-        setResendCooldown(60);
-      }
-    } catch {
-      setErrorMsg('Unable to connect right now. Please check your internet connection.');
-    } finally {
-      setResending(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +75,11 @@ function LoginContent() {
         return;
       }
 
+      if (!password) {
+        setErrorMsg('Please enter a password.');
+        return;
+      }
+
       if (password.length < 6) {
         setErrorMsg('Password must be at least 6 characters long.');
         return;
@@ -136,48 +98,35 @@ function LoginContent() {
           const code = (res.error as any).code;
 
           if (
+            code === 'user_already_exists' ||
+            code === 'email_exists' ||
+            errMsg.toLowerCase().includes('already exists') ||
+            errMsg.toLowerCase().includes('already registered')
+          ) {
+            setErrorMsg('An account with this email already exists. Please sign in instead.');
+            setShowExistingAccountOptions(true);
+          } else if (code === 'weak_password') {
+            setErrorMsg('Password must be at least 6 characters long.');
+          } else if (code === 'email_address_invalid') {
+            setErrorMsg('Please enter a valid, deliverable email address.');
+          } else if (
             status === 429 ||
             code === 'over_email_send_rate_limit' ||
             errMsg.includes('rate limit') ||
             errMsg.includes('seconds')
           ) {
-            setErrorMsg('Too many email requests. Please wait a few minutes before trying again.');
-          } else if (
-            code === 'user_already_exists' ||
-            code === 'email_exists' ||
-            errMsg.toLowerCase().includes('already registered') ||
-            errMsg.toLowerCase().includes('already exists')
-          ) {
-            setErrorMsg('An account may already exist with this email. Please sign in or use Forgot Password.');
-            setShowExistingAccountOptions(true);
-          } else if (code === 'weak_password') {
-            setErrorMsg('Password does not meet the required security requirements (minimum 6 characters).');
-          } else if (code === 'email_address_invalid') {
-            setErrorMsg('Please enter a valid, deliverable email address.');
+            setErrorMsg('Too many attempts. Please wait a moment and try again.');
+          } else if (code === 'email_not_confirmed' || errMsg.toLowerCase().includes('email not confirmed')) {
+            setErrorMsg('Email verification is required by your Supabase project settings. In your Supabase Dashboard, go to Authentication > Providers > Email and turn "Confirm email" OFF for instant signups.');
           } else {
             setErrorMsg(errMsg || 'Failed to create account. Please verify your details.');
           }
         } else {
-          // Check for Supabase anti-enumeration signal: empty identities array means existing user
-          if (res.data?.user?.identities && res.data.user.identities.length === 0) {
-            setErrorMsg('An account may already exist with this email. Please sign in or use Forgot Password.');
-            setShowExistingAccountOptions(true);
-            return;
-          }
-
-          // If session returned immediately: email confirmation disabled
-          if (res.data?.session) {
-            setSuccessMsg('Account created and signed in successfully! Redirecting...');
-            setTimeout(() => {
-              router.replace(redirectPath);
-            }, 800);
-            return;
-          }
-
-          // Email confirmation is ENABLED in Supabase
-          setAwaitingConfirmationEmail(cleanEmail);
-          setResendCooldown(60);
-          setSuccessMsg('');
+          // Account created and immediately authenticated
+          setSuccessMsg('Account created successfully! Signing you in...');
+          setTimeout(() => {
+            router.replace(redirectPath);
+          }, 600);
         }
       } catch {
         setErrorMsg('Unable to connect right now. Please check your internet connection and try again.');
@@ -203,29 +152,25 @@ function LoginContent() {
           const status = (res.error as any).status;
           const code = (res.error as any).code;
 
-          if (code === 'email_not_confirmed' || errMsg.toLowerCase().includes('email not confirmed')) {
-            setErrorMsg('Please confirm your email address before signing in. Check your inbox for the confirmation link.');
-            setAwaitingConfirmationEmail(cleanEmail);
-            if (resendCooldown === 0) {
-              setResendCooldown(60);
-            }
-          } else if (code === 'invalid_credentials' || errMsg.toLowerCase().includes('invalid login credentials')) {
-            setErrorMsg('Email or password is incorrect. Please check your credentials.');
+          if (code === 'invalid_credentials' || errMsg.toLowerCase().includes('invalid login credentials')) {
+            setErrorMsg('Email or password is incorrect. Please verify your credentials or reset your password.');
+          } else if (code === 'email_not_confirmed' || errMsg.toLowerCase().includes('email not confirmed')) {
+            setErrorMsg('Email verification is required by your Supabase project settings. Please turn off "Confirm email" in your Supabase Dashboard (Authentication > Providers > Email).');
           } else if (
             status === 429 ||
             code === 'over_email_send_rate_limit' ||
             errMsg.includes('rate limit') ||
             errMsg.includes('seconds')
           ) {
-            setErrorMsg('Too many attempts. Please wait a few minutes and try again.');
+            setErrorMsg('Too many attempts. Please wait a moment and try again.');
           } else {
-            setErrorMsg('Unable to sign in. Please verify your credentials or reset your password.');
+            setErrorMsg(errMsg || 'Unable to sign in. Please verify your credentials or reset your password.');
           }
         } else {
           setSuccessMsg('Signed in successfully! Redirecting...');
           setTimeout(() => {
             router.replace(redirectPath);
-          }, 600);
+          }, 500);
         }
       } catch {
         setErrorMsg('Unable to connect right now. Please check your internet connection and try again.');
@@ -235,95 +180,6 @@ function LoginContent() {
       }
     }
   };
-
-  // Dedicated view when email confirmation is required
-  if (awaitingConfirmationEmail && mode === 'signup') {
-    return (
-      <div className="min-h-[75vh] flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-valuecart-border shadow-xl space-y-6 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-valuecart-green-tint text-valuecart-green mb-2 shadow-sm">
-            <Mail className="w-7 h-7" />
-          </div>
-
-          <h1 className="text-2xl font-black text-valuecart-navy tracking-tight">
-            Check Your Email
-          </h1>
-
-          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-left text-xs space-y-2">
-            <p className="font-semibold text-blue-950">
-              Account created. Please check your email and confirm your email address before signing in.
-            </p>
-            <p className="text-blue-800">
-              We sent a verification link to: <strong className="font-bold text-valuecart-navy">{awaitingConfirmationEmail}</strong>
-            </p>
-            <p className="text-[11px] text-blue-700">
-              Please click the link in your email inbox or spam folder to activate your account.
-            </p>
-          </div>
-
-          {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-700">
-              {errorMsg}
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="p-3.5 rounded-xl bg-green-50 border border-green-200 text-xs font-semibold text-green-700">
-              {successMsg}
-            </div>
-          )}
-
-          <div className="space-y-3 pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                setMode('signin');
-                setAwaitingConfirmationEmail(null);
-                setErrorMsg('');
-                setSuccessMsg('');
-              }}
-              className="w-full bg-valuecart-navy hover:bg-valuecart-navy-light text-white font-bold py-3 px-4 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
-            >
-              <span>Go to Sign In</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            <button
-              type="button"
-              disabled={resendCooldown > 0 || resending}
-              onClick={() => handleResendConfirmation(awaitingConfirmationEmail)}
-              className="w-full bg-white hover:bg-gray-50 border border-gray-200 text-valuecart-navy font-bold py-2.5 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-            >
-              {resending ? (
-                <span>Sending...</span>
-              ) : resendCooldown > 0 ? (
-                <span>Resend confirmation email ({resendCooldown}s)</span>
-              ) : (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Resend confirmation email</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                setAwaitingConfirmationEmail(null);
-                setErrorMsg('');
-                setSuccessMsg('');
-              }}
-              className="text-xs text-valuecart-text-muted hover:text-valuecart-navy underline"
-            >
-              Back to account creation
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-[75vh] flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
@@ -354,7 +210,7 @@ function LoginContent() {
               setSuccessMsg('');
               setShowExistingAccountOptions(false);
             }}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
               mode === 'signin'
                 ? 'bg-white text-valuecart-navy shadow-xs'
                 : 'text-valuecart-text-muted hover:text-valuecart-navy'
@@ -370,7 +226,7 @@ function LoginContent() {
               setSuccessMsg('');
               setShowExistingAccountOptions(false);
             }}
-            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+            className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
               mode === 'signup'
                 ? 'bg-white text-valuecart-navy shadow-xs'
                 : 'text-valuecart-text-muted hover:text-valuecart-navy'
@@ -398,7 +254,7 @@ function LoginContent() {
                     setErrorMsg('');
                     setShowExistingAccountOptions(false);
                   }}
-                  className="px-3 py-1 bg-valuecart-navy text-white text-[11px] font-bold rounded-lg hover:bg-valuecart-navy-light transition-colors"
+                  className="px-3.5 py-1.5 bg-valuecart-navy text-white text-[11px] font-bold rounded-lg hover:bg-valuecart-navy-light transition-colors cursor-pointer"
                 >
                   Sign In
                 </button>
@@ -408,22 +264,6 @@ function LoginContent() {
                 >
                   Forgot Password
                 </Link>
-              </div>
-            )}
-
-            {/* Email unconfirmed resend option in signin mode */}
-            {mode === 'signin' && awaitingConfirmationEmail && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  disabled={resendCooldown > 0 || resending}
-                  onClick={() => handleResendConfirmation(awaitingConfirmationEmail)}
-                  className="text-[11px] font-bold text-valuecart-navy hover:underline disabled:opacity-50"
-                >
-                  {resendCooldown > 0
-                    ? `Resend confirmation link (${resendCooldown}s)`
-                    : 'Resend confirmation link to inbox'}
-                </button>
               </div>
             )}
           </div>
