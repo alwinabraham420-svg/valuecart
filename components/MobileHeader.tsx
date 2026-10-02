@@ -52,7 +52,7 @@ export default function MobileHeader() {
           >
             <Heart className="w-5 h-5" />
             {wishlist.length > 0 && (
-              <span className="absolute 1 top-1.5 right-1 w-2 h-2 bg-rose-500 rounded-full" />
+              <span className="absolute top-1.5 right-1 w-2 h-2 bg-rose-500 rounded-full" />
             )}
           </Link>
 

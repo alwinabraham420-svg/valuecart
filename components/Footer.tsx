@@ -14,9 +14,88 @@ import {
 
 export default function Footer() {
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [modalContent, setModalContent] = useState<{ title: string; content: string[] } | null>(null);
 
   const toggleSection = (name: string) => {
     setOpenSection((prev) => (prev === name ? null : name));
+  };
+
+  const policyDetails: Record<string, { title: string; content: string[] }> = {
+    'Shipping Policy': {
+      title: 'ValueCart Shipping & Delivery Policy',
+      content: [
+        'Free Pan-India Delivery: We provide complimentary fast shipping across 19,000+ Indian pin codes.',
+        'Dispatch Time: Orders are processed and dispatched within 24 hours from our fulfillment center in Kochi, Kerala.',
+        'Delivery Timelines: South India: 2-3 business days. Rest of India: 4-6 business days.',
+        'Live Tracking: As soon as your order is handed over to our courier partners (BlueDart, Delhivery, Xpressbees), a real-time tracking link is sent via SMS and Email.',
+      ],
+    },
+    'Help Center': {
+      title: 'Customer Help Center',
+      content: [
+        'Have a question about your order, delivery, or product? Our support team is here to help!',
+        'Email Support: support@valuecart.in (24-hour turnaround)',
+        'Phone / WhatsApp: +91 98765 43210 (Mon - Sat, 9:00 AM - 6:00 PM IST)',
+        'Address: ValueCart Retail India, Infopark Technology Hub, Kochi, Kerala - 682042.',
+      ],
+    },
+    'Contact Us': {
+      title: 'Contact ValueCart',
+      content: [
+        'Email: support@valuecart.in',
+        'Helpline: +91 98765 43210',
+        'Customer Support Hours: Monday to Saturday, 9:00 AM to 6:00 PM IST',
+        'Office: ValueCart Retail Hub, Kochi, Kerala, India.',
+      ],
+    },
+    'FAQs': {
+      title: 'Frequently Asked Questions',
+      content: [
+        '1. Is Cash on Delivery (COD) available? Yes, COD is available for almost all serviceable pin codes across India with zero advance payment.',
+        '2. Is the Stainless Steel Chopping Board made of genuine 304 food-grade steel? Yes! It is certified heavy-duty 304 stainless steel that is rust-free, non-porous, antibacterial, and knife-friendly.',
+        '3. What is your return and refund policy? We offer a 7-day hassle-free replacement or full refund if your item arrives damaged or defective.',
+        '4. How can I track my shipment? You can track your order status anytime from your ValueCart account page or via the SMS tracking link sent upon order dispatch.',
+      ],
+    },
+    'About ValueCart': {
+      title: 'About ValueCart Retail India',
+      content: [
+        'ValueCart is built to deliver everyday essential products directly from verified manufacturers to Indian homes at honest, fair prices.',
+        'We eliminate middleman markups, exorbitant distributor margins, and unnecessary retail overheads so you get premium kitchenware, daily essentials, and lifestyle goods at unbeatable value.',
+        'Headquartered in Kochi, Kerala, ValueCart serves customers across all 28 states and 8 union territories.',
+      ],
+    },
+    'Our Story': {
+      title: 'Our Story & Mission',
+      content: [
+        'Founded with the belief that Indian households deserve durable, non-toxic, and hygienic products without overpaying.',
+        'From our flagship 304 Stainless Steel Chopping Board to daily essentials, we meticulously quality-test each batch before dispatch.',
+      ],
+    },
+    'Terms & Conditions': {
+      title: 'Terms & Conditions',
+      content: [
+        '1. All orders placed on ValueCart are subject to product availability and confirmation.',
+        '2. Prices listed on the website are in Indian Rupees (INR) and are inclusive of applicable GST.',
+        '3. For Cash on Delivery orders, customers are expected to verify order details prior to delivery.',
+        '4. Any disputes are subject to the exclusive jurisdiction of the courts in Ernakulam, Kerala.',
+      ],
+    },
+    'Privacy Policy': {
+      title: 'Privacy Policy',
+      content: [
+        '1. ValueCart strictly respects customer privacy. We will NEVER sell or trade your phone number, delivery address, or personal data to third-party marketers.',
+        '2. Your delivery details are solely used for fulfilling your order, providing SMS dispatch notifications, and customer service.',
+        '3. All online payments are 256-bit SSL encrypted and securely processed through RBI-authorized payment aggregators.',
+      ],
+    },
+  };
+
+  const openPolicy = (name: string, e: React.MouseEvent) => {
+    if (policyDetails[name]) {
+      e.preventDefault();
+      setModalContent(policyDetails[name]);
+    }
   };
 
   const shopLinks = [
@@ -31,18 +110,18 @@ export default function Footer() {
   const customerCareLinks = [
     { name: 'Track Order', href: '/account' },
     { name: 'Returns & Refunds', href: '/account' },
-    { name: 'Shipping Policy', href: '#' },
-    { name: 'Help Center', href: '#' },
-    { name: 'Contact Us', href: '#' },
-    { name: 'FAQs', href: '#' },
+    { name: 'Shipping Policy', href: '#shipping', isModal: true },
+    { name: 'Help Center', href: '#help', isModal: true },
+    { name: 'Contact Us', href: '#contact', isModal: true },
+    { name: 'FAQs', href: '#faq', isModal: true },
   ];
 
   const aboutLinks = [
-    { name: 'About ValueCart', href: '#' },
-    { name: 'Our Story', href: '#' },
-    { name: 'Terms & Conditions', href: '#' },
-    { name: 'Privacy Policy', href: '#' },
-    { name: 'Sitemap', href: '#' },
+    { name: 'About ValueCart', href: '#about', isModal: true },
+    { name: 'Our Story', href: '#story', isModal: true },
+    { name: 'Terms & Conditions', href: '#terms', isModal: true },
+    { name: 'Privacy Policy', href: '#privacy', isModal: true },
+    { name: 'Sitemap', href: '/sitemap.xml', isModal: false },
   ];
 
   return (
@@ -175,12 +254,22 @@ export default function Footer() {
             >
               {customerCareLinks.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-valuecart-green transition-colors"
-                  >
-                    {link.name}
-                  </Link>
+                  {link.isModal ? (
+                    <button
+                      type="button"
+                      onClick={(e) => openPolicy(link.name, e)}
+                      className="hover:text-valuecart-green transition-colors text-left cursor-pointer"
+                    >
+                      {link.name}
+                    </button>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="hover:text-valuecart-green transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -208,12 +297,22 @@ export default function Footer() {
             >
               {aboutLinks.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-valuecart-green transition-colors"
-                  >
-                    {link.name}
-                  </Link>
+                  {link.isModal ? (
+                    <button
+                      type="button"
+                      onClick={(e) => openPolicy(link.name, e)}
+                      className="hover:text-valuecart-green transition-colors text-left cursor-pointer"
+                    >
+                      {link.name}
+                    </button>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="hover:text-valuecart-green transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -274,6 +373,43 @@ export default function Footer() {
         </div>
 
       </div>
+
+      {/* Policy & Support Detail Modal */}
+      {modalContent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-gray-100 relative animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h3 className="font-extrabold text-base sm:text-lg text-valuecart-navy">
+                {modalContent.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setModalContent(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500 hover:text-valuecart-navy transition-colors cursor-pointer text-sm font-bold"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-4 space-y-2.5 text-xs sm:text-sm text-valuecart-text-main leading-relaxed">
+              {modalContent.content.map((paragraph, idx) => (
+                <div key={idx} className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-valuecart-text-muted">
+                  {paragraph}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setModalContent(null)}
+                className="bg-valuecart-navy hover:bg-valuecart-navy-light text-white font-bold px-6 py-2.5 rounded-full text-xs transition-colors cursor-pointer shadow-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 }

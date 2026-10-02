@@ -62,8 +62,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gaId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
-  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const gaId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID || 'G-TC8K4K7TF6';
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || '1109620781524930';
 
   return (
     <html lang="en" className={inter.variable}>

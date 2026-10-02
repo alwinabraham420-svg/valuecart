@@ -8,6 +8,16 @@ import { Home, Grid, Tag, User, MoreHorizontal } from 'lucide-react';
 export default function MobileBottomNavigation() {
   const pathname = usePathname();
 
+  // Hide bottom bar on product detail pages (which have sticky purchase bar),
+  // checkout page (which has full sticky submission buttons), and admin panel.
+  if (
+    pathname.startsWith('/product/') ||
+    pathname.startsWith('/checkout') ||
+    pathname.startsWith('/admin')
+  ) {
+    return null;
+  }
+
   const navItems = [
     { name: 'Home', href: '/', icon: Home, active: pathname === '/' },
     { name: 'Categories', href: '/products', icon: Grid, active: pathname.startsWith('/category') },
