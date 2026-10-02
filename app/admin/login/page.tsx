@@ -24,7 +24,9 @@ export default function AdminLoginPage() {
       if (success) {
         router.push('/admin');
       } else {
-        setError('Invalid admin credentials or insufficient administrator privileges.');
+        setError(
+          'Invalid admin credentials. Please ensure the admin user exists in your Supabase Auth (Dashboard > Authentication > Users) with "Auto Confirm" checked.'
+        );
         setLoading(false);
       }
     } catch {
@@ -86,6 +88,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="alwinabraham420@gmail.com"
                 required
                 className="w-full h-11 pl-10 pr-4 rounded-xl border border-gray-200 text-xs sm:text-sm text-valuecart-navy focus:outline-none focus:ring-2 focus:ring-valuecart-green"
               />
@@ -102,13 +105,11 @@ export default function AdminLoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
                 required
                 className="w-full h-11 pl-10 pr-4 rounded-xl border border-gray-200 text-xs sm:text-sm text-valuecart-navy focus:outline-none focus:ring-2 focus:ring-valuecart-green"
               />
               <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-            </div>
-            <div className="text-[11px] text-valuecart-text-muted mt-1.5 flex justify-between">
-              <span>Default password: <strong className="text-valuecart-navy">valuecart2026</strong></span>
             </div>
           </div>
 

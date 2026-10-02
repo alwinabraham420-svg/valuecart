@@ -306,6 +306,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile?.role === 'admin' ||
     (user as any)?.app_metadata?.role === 'admin' ||
     user?.email?.includes('admin') ||
+    user?.email?.toLowerCase().trim() === 'alwinabraham420@gmail.com' ||
     false;
 
   return (

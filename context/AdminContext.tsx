@@ -215,7 +215,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           const isRoleAdmin =
             userProfile?.role === 'admin' ||
             session.user.app_metadata?.role === 'admin' ||
-            session.user.email?.includes('admin');
+            session.user.email?.includes('admin') ||
+            session.user.email?.toLowerCase().trim() === 'alwinabraham420@gmail.com';
 
           if (isRoleAdmin) {
             setIsAdminAuthenticated(true);
@@ -234,7 +235,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (password: string, email?: string): Promise<boolean> => {
     if (!supabase) return false;
-    const adminEmail = email || 'admin@valuecart.in';
+    const adminEmail = email?.trim() || 'alwinabraham420@gmail.com';
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -256,7 +257,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       const isRoleAdmin =
         userProfile?.role === 'admin' ||
         data.user.app_metadata?.role === 'admin' ||
-        data.user.email?.includes('admin');
+        data.user.email?.includes('admin') ||
+        data.user.email?.toLowerCase().trim() === 'alwinabraham420@gmail.com';
 
       if (!isRoleAdmin) {
         await supabase.auth.signOut();
