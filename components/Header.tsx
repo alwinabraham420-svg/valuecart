@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Heart, User, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 import SearchBar from './SearchBar';
 import DesktopNavigation from './DesktopNavigation';
@@ -81,17 +81,6 @@ export default function Header() {
                     )}
                   </div>
                   <span className="text-sm font-medium">Wishlist</span>
-                </Link>
-
-                {/* Account */}
-                <Link
-                  href="/account"
-                  className="flex items-center gap-2 text-valuecart-navy hover:text-valuecart-green group transition-colors"
-                >
-                  <div className="p-1">
-                    <User className="w-5 h-5 text-valuecart-navy group-hover:text-valuecart-green transition-colors" />
-                  </div>
-                  <span className="text-sm font-medium">Account</span>
                 </Link>
 
                 {/* Cart Button */}

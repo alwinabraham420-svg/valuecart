@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Grid, Tag, User, MoreHorizontal } from 'lucide-react';
+import { Home, Grid, Tag, ShoppingBag, MoreHorizontal } from 'lucide-react';
 
 export default function MobileBottomNavigation() {
   const pathname = usePathname();
@@ -22,7 +22,7 @@ export default function MobileBottomNavigation() {
     { name: 'Home', href: '/', icon: Home, active: pathname === '/' },
     { name: 'Categories', href: '/products', icon: Grid, active: pathname.startsWith('/category') },
     { name: 'Deals', href: '/products?filter=deals', icon: Tag, active: pathname.includes('deals') },
-    { name: 'Account', href: '/account', icon: User, active: pathname === '/account' },
+    { name: 'Cart', href: '/cart', icon: ShoppingBag, active: pathname === '/cart' },
     { name: 'More', href: '/products', icon: MoreHorizontal, active: pathname === '/products' && !pathname.includes('deals') },
   ];
 

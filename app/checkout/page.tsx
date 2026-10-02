@@ -45,7 +45,6 @@ export default function CheckoutPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
   // Autofill user profile data if logged in
@@ -402,51 +401,6 @@ export default function CheckoutPage() {
     }
   };
 
-  // If user is not authenticated and hasn't selected guest checkout, show options
-  if (!authLoading && !user && !isGuest && !createdOrder) {
-    return (
-      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="bg-white rounded-3xl p-8 border border-valuecart-border shadow-soft space-y-5">
-          <div className="w-16 h-16 rounded-2xl bg-valuecart-navy text-white flex items-center justify-center mx-auto shadow-md">
-            <Lock className="w-8 h-8" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-valuecart-navy">
-              Checkout &amp; Delivery Details
-            </h1>
-            <p className="text-xs sm:text-sm text-valuecart-text-muted mt-2 max-w-md mx-auto leading-relaxed">
-              Sign in for faster checkout and easy order tracking, or continue directly as a guest.
-              Your cart ({cart.length} item{cart.length === 1 ? '' : 's'}) is preserved.
-            </p>
-          </div>
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/login?redirect=/checkout"
-              className="w-full sm:w-auto bg-valuecart-navy hover:bg-valuecart-navy-light text-white font-bold px-7 py-3.5 rounded-full text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Sign In / Register</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setIsGuest(true)}
-              className="w-full sm:w-auto bg-valuecart-green hover:bg-valuecart-green-dark text-white font-bold px-7 py-3.5 rounded-full text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Continue as Guest</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <Link
-              href="/cart"
-              className="w-full sm:w-auto bg-white hover:bg-gray-50 text-valuecart-navy border border-gray-300 font-semibold px-6 py-3.5 rounded-full text-xs sm:text-sm transition-colors text-center"
-            >
-              Cart
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // If cart is empty and no order created, show clean recovery
   if (cart.length === 0 && !createdOrder) {
     return (
@@ -580,14 +534,8 @@ export default function CheckoutPage() {
         {/* Action CTAs */}
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link
-            href={`/account/orders/${createdOrder.id}`}
-            className="bg-valuecart-navy hover:bg-valuecart-navy-light text-white font-bold px-7 py-3.5 rounded-full text-xs sm:text-sm transition-colors shadow-sm cursor-pointer"
-          >
-            View My Order
-          </Link>
-          <Link
             href="/"
-            className="bg-valuecart-green hover:bg-valuecart-green-dark text-white font-bold px-7 py-3.5 rounded-full text-xs sm:text-sm transition-colors shadow-sm cursor-pointer"
+            className="bg-valuecart-green hover:bg-valuecart-green-dark text-white font-bold px-8 py-3.5 rounded-full text-xs sm:text-sm transition-colors shadow-md cursor-pointer"
           >
             Continue Shopping
           </Link>

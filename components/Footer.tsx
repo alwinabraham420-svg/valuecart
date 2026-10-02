@@ -89,6 +89,22 @@ export default function Footer() {
         '3. All online payments are 256-bit SSL encrypted and securely processed through RBI-authorized payment aggregators.',
       ],
     },
+    'Track Order': {
+      title: 'Track Your ValueCart Order',
+      content: [
+        'Live SMS Tracking: As soon as your order is dispatched, a real-time tracking link from our delivery partner (BlueDart, Delhivery, or Xpressbees) is automatically sent to your mobile number.',
+        'SMS Confirmation: You will also receive SMS updates when your parcel is out for delivery.',
+        'Need Immediate Assistance? Contact support@valuecart.in or call our helpline +91 98765 43210 with your Order Number for instant status updates.',
+      ],
+    },
+    'Returns & Refunds': {
+      title: 'Returns & Replacement Policy',
+      content: [
+        '7-Day Hassle-Free Returns: If your product arrives damaged, defective, or incorrect, you are eligible for an immediate replacement or full refund.',
+        'Easy Support: Simply WhatsApp us at +91 98765 43210 or email support@valuecart.in with a photo of the received parcel.',
+        'Zero Pickup Fee: In case of defect or transit damage, return pickup from your doorstep is completely free of charge.',
+      ],
+    },
   };
 
   const openPolicy = (name: string, e: React.MouseEvent) => {
@@ -108,8 +124,8 @@ export default function Footer() {
   ];
 
   const customerCareLinks = [
-    { name: 'Track Order', href: '/account' },
-    { name: 'Returns & Refunds', href: '/account' },
+    { name: 'Track Order', href: '#track', isModal: true },
+    { name: 'Returns & Refunds', href: '#returns', isModal: true },
     { name: 'Shipping Policy', href: '#shipping', isModal: true },
     { name: 'Help Center', href: '#help', isModal: true },
     { name: 'Contact Us', href: '#contact', isModal: true },

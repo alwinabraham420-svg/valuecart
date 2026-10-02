@@ -136,19 +136,12 @@ export default function MobileHeader() {
                 </div>
               </div>
 
-              {/* Help & Account links */}
+              {/* Quick Navigation links */}
               <div className="border-t border-gray-100 p-3">
                 <div className="text-xs font-bold uppercase tracking-wider text-valuecart-text-muted px-3 py-2">
-                  Account & Help
+                  Quick Navigation
                 </div>
                 <div className="space-y-0.5">
-                  <Link
-                    href="/account"
-                    onClick={() => setDrawerOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 text-sm text-valuecart-navy hover:text-valuecart-green"
-                  >
-                    <span>My Account & Orders</span>
-                  </Link>
                   <Link
                     href="/cart"
                     onClick={() => setDrawerOpen(false)}
@@ -157,11 +150,18 @@ export default function MobileHeader() {
                     <span>My Shopping Cart ({cartCount})</span>
                   </Link>
                   <Link
+                    href="/products?filter=deals"
+                    onClick={() => setDrawerOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 text-sm text-valuecart-navy hover:text-valuecart-green"
+                  >
+                    <span>Special Deals &amp; Offers</span>
+                  </Link>
+                  <Link
                     href="/products"
                     onClick={() => setDrawerOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 text-sm text-valuecart-navy hover:text-valuecart-green"
                   >
-                    <span>Today&apos;s Special Deals</span>
+                    <span>All Products</span>
                   </Link>
                 </div>
               </div>
