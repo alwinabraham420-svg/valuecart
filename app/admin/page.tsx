@@ -88,9 +88,9 @@ export default function AdminDashboardPage() {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-valuecart-text-muted mt-1 font-medium">
               <span>Margin:</span>
-              <strong className="text-valuecart-navy font-bold">{analytics.profitMargin.toFixed(1)}%</strong>
+              <strong className="text-valuecart-navy font-bold">{analytics.revenue > 0 ? `${analytics.profitMargin.toFixed(1)}%` : '—'}</strong>
               <span className="text-gray-300">•</span>
-              <span>ROAS: <strong className="text-valuecart-green">{analytics.roas.toFixed(2)}x</strong></span>
+              <span>ROAS: <strong className="text-valuecart-green">{analytics.advertisingCost > 0 ? `${analytics.roas.toFixed(2)}x` : '—'}</strong></span>
             </div>
           </div>
         </div>
@@ -130,9 +130,9 @@ export default function AdminDashboardPage() {
               ₹{analytics.supplierCost.toLocaleString()}
             </div>
             <p className="text-xs text-valuecart-text-muted mt-1">
-              {analytics.revenue > 0
+              {analytics.revenue > 0 && analytics.supplierCost > 0
                 ? `${Math.round((analytics.supplierCost / analytics.revenue) * 100)}% of gross revenue`
-                : 'Paid to Meesho & suppliers'}
+                : '—'}
             </p>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function AdminDashboardPage() {
               ₹{analytics.advertisingCost.toLocaleString()}
             </div>
             <p className="text-xs text-valuecart-text-muted mt-1">
-              Avg CAC: <strong className="text-valuecart-navy">₹{analytics.totalOrders > 0 ? Math.round(analytics.advertisingCost / analytics.totalOrders) : 0}</strong>
+              Avg CAC: <strong className="text-valuecart-navy">{analytics.advertisingCost > 0 && analytics.totalOrders > 0 ? `₹${Math.round(analytics.advertisingCost / analytics.totalOrders)}` : '—'}</strong>
             </p>
           </div>
         </div>
@@ -366,7 +366,7 @@ export default function AdminDashboardPage() {
                     ₹{ord.financials.sellingPrice}
                   </td>
                   <td className="p-3 text-right font-extrabold text-valuecart-green">
-                    +₹{ord.financials.estimatedProfit}
+                    {ord.financials.supplierCost > 0 ? `+₹${ord.financials.estimatedProfit}` : '—'}
                   </td>
                   <td className="p-3 text-right">
                     <Link

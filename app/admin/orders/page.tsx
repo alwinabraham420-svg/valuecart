@@ -207,15 +207,15 @@ export default function AdminOrdersPage() {
             <table className="w-full text-left text-xs">
               <thead className="bg-gray-50/80 text-valuecart-navy font-bold uppercase tracking-wider border-b border-gray-100">
                 <tr>
-                  <th className="p-4">Order ID &amp; Date</th>
-                  <th className="p-4">Customer Details</th>
-                  <th className="p-4">Ordered Products</th>
+                  <th className="p-4">Order ID</th>
+                  <th className="p-4">Date / Time</th>
+                  <th className="p-4">Customer</th>
+                  <th className="p-4">Mobile</th>
+                  <th className="p-4">Products</th>
                   <th className="p-4">Payment</th>
-                  <th className="p-4">Attribution / Campaign</th>
-                  <th className="p-4">Workflow Status</th>
-                  <th className="p-4">Supplier Cost</th>
-                  <th className="p-4">Selling Total</th>
-                  <th className="p-4 text-right">Est. Profit</th>
+                  <th className="p-4">Payment Status</th>
+                  <th className="p-4">Order Status</th>
+                  <th className="p-4 text-right">Total</th>
                   <th className="p-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -225,7 +225,7 @@ export default function AdminOrdersPage() {
 
                   return (
                     <tr key={ord.id} className="hover:bg-gray-50/70 transition-colors">
-                      {/* Order & Date */}
+                      {/* Order ID */}
                       <td className="p-4 font-bold text-valuecart-navy whitespace-nowrap">
                         <Link
                           href={`/admin/orders/${ord.id}`}
@@ -233,43 +233,48 @@ export default function AdminOrdersPage() {
                         >
                           {ord.orderNumber}
                         </Link>
-                        <span className="text-[11px] text-valuecart-text-muted font-normal block mt-0.5">
-                          {new Date(ord.createdAt).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
+                      </td>
+
+                      {/* Date/Time */}
+                      <td className="p-4 whitespace-nowrap text-valuecart-text-muted">
+                        {new Date(ord.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </td>
 
                       {/* Customer */}
                       <td className="p-4">
                         <div className="font-bold text-valuecart-navy">{ord.customer.name}</div>
-                        <div className="text-[11px] text-valuecart-text-muted">{ord.customer.mobile}</div>
                         <div className="text-[10px] text-gray-400">
-                          {ord.delivery.city}, {ord.delivery.state}
+                          {ord.delivery.city ? `${ord.delivery.city}, ${ord.delivery.state}` : '—'}
                         </div>
+                      </td>
+
+                      {/* Mobile */}
+                      <td className="p-4 whitespace-nowrap font-medium text-valuecart-navy">
+                        {ord.customer.mobile || '—'}
                       </td>
 
                       {/* Products */}
                       <td className="p-4 max-w-[200px]">
                         <div className="font-semibold text-valuecart-navy line-clamp-1">
-                          {ord.items[0]?.productName}
+                          {ord.items[0]?.productName || 'Product'}
                         </div>
-                        {ord.items[0]?.variant && (
-                          <span className="text-[10px] text-gray-500 block">
-                            {ord.items[0].variant}
-                          </span>
-                        )}
-                        {ord.items.length > 1 && (
-                          <span className="text-[10px] font-bold text-valuecart-green">
-                            +{ord.items.length - 1} more items
-                          </span>
-                        )}
+                        <div className="text-[10px] text-gray-500">
+                          Qty: {ord.items[0]?.quantity || 1}
+                          {ord.items.length > 1 && (
+                            <span className="ml-1 font-bold text-valuecart-green">
+                              (+{ord.items.length - 1} more)
+                            </span>
+                          )}
+                        </div>
                       </td>
 
-                      {/* Payment */}
+                      {/* Payment Method */}
                       <td className="p-4 whitespace-nowrap">
                         <span
                           className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded ${
@@ -280,39 +285,25 @@ export default function AdminOrdersPage() {
                         >
                           {isCOD ? 'COD' : 'ONLINE'}
                         </span>
-                        <span className="block text-[10px] text-valuecart-text-muted mt-0.5">
-                          {ord.payment.status === 'paid' ? 'PAID' : 'PAYMENT PENDING'}
+                      </td>
+
+                      {/* Payment Status */}
+                      <td className="p-4 whitespace-nowrap">
+                        <span className={`text-[11px] font-semibold ${
+                          ord.payment.status === 'paid' ? 'text-emerald-700' : 'text-amber-700'
+                        }`}>
+                          {ord.payment.status === 'paid' ? 'Paid' : 'Pending'}
                         </span>
                       </td>
 
-                      {/* Marketing Attribution */}
-                      <td className="p-4 max-w-[150px]">
-                        <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">
-                          {ord.marketing.utm_source || 'direct'}
-                        </span>
-                        <span className="block text-[11px] text-valuecart-navy font-medium truncate mt-0.5">
-                          {ord.marketing.utm_campaign || 'direct'}
-                        </span>
-                      </td>
-
-                      {/* Status */}
+                      {/* Order Status */}
                       <td className="p-4 whitespace-nowrap">
                         {getStatusBadge(ord.orderStatus)}
                       </td>
 
-                      {/* Supplier Cost */}
-                      <td className="p-4 font-semibold text-amber-800 whitespace-nowrap">
-                        ₹{ord.financials.supplierCost}
-                      </td>
-
-                      {/* Selling Price */}
-                      <td className="p-4 font-black text-valuecart-navy whitespace-nowrap">
-                        ₹{ord.financials.sellingPrice}
-                      </td>
-
-                      {/* Estimated Profit */}
-                      <td className="p-4 text-right font-black text-valuecart-green whitespace-nowrap">
-                        +₹{ord.financials.estimatedProfit}
+                      {/* Total */}
+                      <td className="p-4 text-right font-black text-valuecart-navy whitespace-nowrap">
+                        ₹{ord.financials.sellingPrice.toLocaleString()}
                       </td>
 
                       {/* Actions */}

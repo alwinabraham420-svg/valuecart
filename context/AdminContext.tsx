@@ -108,28 +108,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           status: h.new_status,
           timestamp: h.created_at,
           note: h.note || '',
-          updatedBy: h.updated_by || 'Admin',
+          updatedBy: h.updated_by || 'System',
         })),
-        supplier: {
-          supplierName: supplierRecord?.courier_name || 'ValueCart Supplier Hub',
-          supplierOrderId: supplierRecord?.supplier_order_id,
-          supplierCost: Number(supplierRecord?.total_supplier_cost || totalSupplierCost),
-          trackingNumber: supplierRecord?.tracking_number,
-          courier: supplierRecord?.courier_name,
-          notes: supplierRecord?.notes,
+        supplier: supplierRecord ? {
+          supplierName: supplierRecord.courier_name || 'Direct Supplier',
+          supplierOrderId: supplierRecord.supplier_order_id || '',
+          supplierCost: Number(supplierRecord.total_supplier_cost || totalSupplierCost),
+          trackingNumber: supplierRecord.tracking_number || '',
+          courier: supplierRecord.courier_name || '',
+          notes: supplierRecord.notes || '',
+        } : {
+          supplierName: '',
+          supplierOrderId: '',
+          supplierCost: totalSupplierCost,
+          trackingNumber: '',
+          courier: '',
+          notes: '',
         },
         marketing: {
-          utm_source: 'direct',
-          utm_medium: 'organic',
-          utm_campaign: 'direct_traffic',
+          utm_source: row.marketing_attribution?.[0]?.utm_source || 'direct',
+          utm_medium: row.marketing_attribution?.[0]?.utm_medium || 'organic',
+          utm_campaign: row.marketing_attribution?.[0]?.utm_campaign || 'direct_traffic',
+          utm_content: row.marketing_attribution?.[0]?.utm_content,
+          utm_term: row.marketing_attribution?.[0]?.utm_term,
         },
         financials: {
           sellingPrice: totalAmount,
           supplierCost: totalSupplierCost,
           gatewayFee: paymentRecord?.payment_method === 'online' ? Math.round(totalAmount * 0.02) : 0,
-          advertisingCost: 85,
-          otherCost: 18,
-          estimatedProfit: totalAmount - totalSupplierCost - 85 - 18,
+          advertisingCost: 0,
+          otherCost: 0,
+          estimatedProfit: totalSupplierCost > 0
+            ? Math.max(0, totalAmount - totalSupplierCost - (paymentRecord?.payment_method === 'online' ? Math.round(totalAmount * 0.02) : 0))
+            : totalAmount,
         },
         customerTrackingTimeline: [],
       };
@@ -179,6 +190,19 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             courier_name,
             tracking_number,
             notes
+          ),
+          marketing_attribution (
+            utm_source,
+            utm_medium,
+            utm_campaign,
+            utm_content,
+            utm_term
+          ),
+          order_status_history (
+            new_status,
+            note,
+            updated_by,
+            created_at
           )
         `)
         .order('created_at', { ascending: false });
@@ -231,6 +255,26 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkSession();
+
+    // Setup real-time listener for orders table changes
+    const channel = supabase
+      ? supabase
+          .channel('admin-orders-realtime')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'orders' },
+            () => {
+              fetchOrdersFromDb();
+            }
+          )
+          .subscribe()
+      : null;
+
+    return () => {
+      if (channel && supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [supabase, fetchOrdersFromDb]);
 
   const login = async (password: string, email?: string): Promise<boolean> => {

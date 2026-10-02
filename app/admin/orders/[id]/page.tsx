@@ -128,22 +128,31 @@ export default function OrderDetailPage({
                   },
                   orderStatus: data.order_status,
                   statusHistory: [],
-                  supplier: {
-                    supplierName: supplierRecord?.courier_name || 'ValueCart Supplier Hub',
-                    supplierOrderId: supplierRecord?.supplier_order_id,
-                    supplierCost: Number(supplierRecord?.total_supplier_cost || totalSupplierCost),
-                    trackingNumber: supplierRecord?.tracking_number,
-                    courier: supplierRecord?.courier_name,
-                    notes: supplierRecord?.notes,
+                  supplier: supplierRecord ? {
+                    supplierName: supplierRecord.courier_name || '',
+                    supplierOrderId: supplierRecord.supplier_order_id || '',
+                    supplierCost: Number(supplierRecord.total_supplier_cost || totalSupplierCost),
+                    trackingNumber: supplierRecord.tracking_number || '',
+                    courier: supplierRecord.courier_name || '',
+                    notes: supplierRecord.notes || '',
+                  } : {
+                    supplierName: '',
+                    supplierOrderId: '',
+                    supplierCost: totalSupplierCost,
+                    trackingNumber: '',
+                    courier: '',
+                    notes: '',
                   },
                   marketing: { utm_source: 'direct', utm_medium: 'organic', utm_campaign: 'direct' },
                   financials: {
                     sellingPrice: Number(data.total_amount),
                     supplierCost: totalSupplierCost,
                     gatewayFee: paymentRecord?.payment_method === 'online' ? Math.round(Number(data.total_amount) * 0.02) : 0,
-                    advertisingCost: 85,
-                    otherCost: 18,
-                    estimatedProfit: Number(data.total_amount) - totalSupplierCost - 85 - 18,
+                    advertisingCost: 0,
+                    otherCost: 0,
+                    estimatedProfit: totalSupplierCost > 0
+                      ? Math.max(0, Number(data.total_amount) - totalSupplierCost - (paymentRecord?.payment_method === 'online' ? Math.round(Number(data.total_amount) * 0.02) : 0))
+                      : Number(data.total_amount),
                   },
                   customerTrackingTimeline: [],
                 });
@@ -163,22 +172,22 @@ export default function OrderDetailPage({
   const [statusNote, setStatusNote] = useState('');
 
   // Editable supplier fields
-  const [supplierName, setSupplierName] = useState('Meesho Seller');
+  const [supplierName, setSupplierName] = useState('');
   const [supplierOrderId, setSupplierOrderId] = useState('');
   const [supplierCost, setSupplierCost] = useState(0);
   const [trackingNumber, setTrackingNumber] = useState('');
-  const [courier, setCourier] = useState('Delhivery');
+  const [courier, setCourier] = useState('');
   const [supplierNotes, setSupplierNotes] = useState('');
   const [savedSupplierMsg, setSavedSupplierMsg] = useState(false);
 
   React.useEffect(() => {
     if (order) {
       setSelectedStatus(order.orderStatus);
-      setSupplierName(order.supplier?.supplierName || 'Meesho Seller');
+      setSupplierName(order.supplier?.supplierName || '');
       setSupplierOrderId(order.supplier?.supplierOrderId || '');
       setSupplierCost(order.supplier?.supplierCost || 0);
       setTrackingNumber(order.supplier?.trackingNumber || '');
-      setCourier(order.supplier?.courier || 'Delhivery');
+      setCourier(order.supplier?.courier || '');
       setSupplierNotes(order.supplier?.notes || '');
     }
   }, [order]);
