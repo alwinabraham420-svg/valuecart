@@ -298,18 +298,18 @@ export default function CheckoutPage() {
                 orderStatus: 'payment_confirmed',
                 statusHistory: [],
                 supplier: {
-                  supplierName: 'ValueCart Supplier Hub',
+                  supplierName: '',
                   supplierCost: 0,
-                  notes: 'Online Paid Order',
+                  notes: '',
                 },
                 marketing: attribution || { utm_source: 'direct', utm_medium: 'organic', utm_campaign: 'direct' },
                 financials: {
                   sellingPrice: cartGrandTotal,
                   supplierCost: 0,
                   gatewayFee: 0,
-                  advertisingCost: 85,
-                  otherCost: 18,
-                  estimatedProfit: 0,
+                  advertisingCost: 0,
+                  otherCost: 0,
+                  estimatedProfit: cartGrandTotal,
                 },
                 customerTrackingTimeline: [],
               };

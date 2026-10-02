@@ -208,11 +208,11 @@ export async function POST(req: NextRequest) {
           }));
           await supabase.from('order_items').insert(itemsPayload);
 
-          // Insert pending payment record
+          // Insert initial payment record (marks as 'failed' until server HMAC signature verification or webhook sets it to 'paid')
           await supabase.from('payments').insert({
             order_id: orderId,
             payment_method: 'online',
-            payment_status: 'pending_cod', // pending until verified
+            payment_status: 'failed',
             razorpay_order_id: rzpOrder.id,
             amount: grandTotal,
           });

@@ -166,9 +166,9 @@ export async function POST(req: NextRequest) {
       (acc, item) => acc + item.supplierCost * item.quantity,
       0
     );
-    const advertisingCost = 85;
-    const otherCost = 18;
-    const estimatedProfit = grandTotal - totalSupplierCost - advertisingCost - otherCost;
+    const advertisingCost = 0;
+    const otherCost = 0;
+    const estimatedProfit = grandTotal - totalSupplierCost;
 
     const fullOrder: Order = {
       id: `ord-${Date.now()}`,
@@ -207,9 +207,9 @@ export async function POST(req: NextRequest) {
         },
       ],
       supplier: {
-        supplierName: 'ValueCart Supplier Hub',
+        supplierName: '',
         supplierCost: totalSupplierCost,
-        notes: 'Pending manual supplier dispatch',
+        notes: '',
       },
       marketing: {
         utm_source: marketing?.utm_source || 'direct',

@@ -98,7 +98,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         items,
         payment: {
           method: paymentRecord?.payment_method || 'cod',
-          status: paymentRecord?.payment_status || 'pending_cod',
+          status: paymentRecord?.payment_status || (paymentRecord?.payment_method === 'online' ? 'failed' : 'pending_cod'),
           transactionId: paymentRecord?.razorpay_payment_id,
           razorpayOrderId: paymentRecord?.razorpay_order_id,
           paidAt: paymentRecord?.paid_at,
