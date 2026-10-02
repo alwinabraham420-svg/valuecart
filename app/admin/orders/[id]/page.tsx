@@ -89,7 +89,7 @@ export default function OrderDetailPage({
             `)
             .or(`id.eq.${id},order_number.eq.${id}`)
             .maybeSingle()
-            .then(({ data }) => {
+            .then(({ data }: { data: any }) => {
               if (data) {
                 const items = (data.order_items || []).map((item: any) => ({
                   productId: item.product_id || item.id,

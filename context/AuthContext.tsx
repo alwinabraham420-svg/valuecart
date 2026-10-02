@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export interface UserProfile {
@@ -12,16 +12,25 @@ export interface UserProfile {
   role?: 'customer' | 'admin' | 'operator';
 }
 
+export interface AuthResponse {
+  data: any;
+  error: AuthError | Error | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, phone: string) => Promise<AuthResponse>;
+  signIn: (email: string, password: string) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<AuthResponse>;
+  resendConfirmationEmail: (email: string) => Promise<AuthResponse>;
+  updatePassword: (newPassword: string) => Promise<AuthResponse>;
   refreshProfile: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,190 +43,247 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const supabase = getSupabaseBrowserClient();
 
-  const syncLocalCache = (u: any, p: any, s: any) => {
-    setUser(u);
-    setProfile(p);
-    setSession(s);
-    if (typeof window !== 'undefined') {
-      if (u) {
-        localStorage.setItem('valuecart_auth_user', JSON.stringify(u));
-        localStorage.setItem('valuecart_auth_profile', JSON.stringify(p));
-      } else {
-        localStorage.removeItem('valuecart_auth_user');
-        localStorage.removeItem('valuecart_auth_profile');
-      }
-    }
-  };
+  const fetchProfile = useCallback(
+    async (userId: string, userEmail: string, userMeta?: Record<string, any>) => {
+      if (!supabase) return;
 
-  useEffect(() => {
-    // 1. Instant hydration from localStorage if available
-    if (typeof window !== 'undefined') {
+      const fallbackProfile: UserProfile = {
+        id: userId,
+        email: userEmail,
+        full_name: userMeta?.full_name || userEmail.split('@')[0] || 'Customer',
+        phone: userMeta?.phone || '',
+        role: 'customer',
+      };
+
       try {
-        const cachedUser = localStorage.getItem('valuecart_auth_user');
-        const cachedProfile = localStorage.getItem('valuecart_auth_profile');
-        if (cachedUser && cachedProfile) {
-          setUser(JSON.parse(cachedUser));
-          setProfile(JSON.parse(cachedProfile));
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, email, full_name, phone, role')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (!error && data) {
+          setProfile(data as UserProfile);
+          return;
         }
-      } catch {
-        // Ignore cache parse error
-      }
-    }
 
-    // 2. Verify server session
-    const checkServerSession = async () => {
-      try {
-        const res = await fetch('/api/auth/session');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.user) {
-            syncLocalCache(data.user, data.profile, data.session);
-            setLoading(false);
-            return;
-          }
+        // Profile not found in public.users; attempt to create it
+        const { data: inserted, error: insertError } = await supabase
+          .from('users')
+          .upsert([fallbackProfile])
+          .select()
+          .maybeSingle();
+
+        if (!insertError && inserted) {
+          setProfile(inserted as UserProfile);
+        } else {
+          setProfile(fallbackProfile);
         }
       } catch (err) {
-        console.warn('Session check warning:', err);
+        console.warn('[ValueCart Auth] Profile fetch handled gracefully:', err);
+        setProfile(fallbackProfile);
       }
+    },
+    [supabase]
+  );
 
-      // 3. Fallback to Supabase if connected
-      if (supabase) {
-        try {
-          const { data: { session: sbSession } } = await supabase.auth.getSession();
-          if (sbSession?.user) {
-            const sbUser = sbSession.user;
-            const sbProfile: UserProfile = {
-              id: sbUser.id,
-              email: sbUser.email || '',
-              full_name: sbUser.user_metadata?.full_name || sbUser.email?.split('@')[0] || 'Customer',
-              phone: sbUser.user_metadata?.phone || '',
-              role: (sbUser.app_metadata?.role as any) || 'customer',
-            };
-            syncLocalCache(sbUser as any, sbProfile, sbSession as any);
-          }
-        } catch (sbErr) {
-          console.warn('Supabase session fallback warning:', sbErr);
-        }
-      }
-
+  useEffect(() => {
+    if (!supabase) {
       setLoading(false);
-    };
+      return;
+    }
 
-    checkServerSession();
-  }, [supabase]);
+    let isMounted = true;
+
+    // 1. Initial Session Check
+    supabase.auth
+      .getSession()
+      .then((res: { data: { session: Session | null }; error: AuthError | null }) => {
+        if (!isMounted) return;
+        const initialSession = res.data.session;
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        if (initialSession?.user) {
+          fetchProfile(
+            initialSession.user.id,
+            initialSession.user.email || '',
+            initialSession.user.user_metadata
+          );
+        }
+        setLoading(false);
+      })
+      .catch((err: unknown) => {
+        console.error('[ValueCart Auth] Initial session error:', err);
+        if (isMounted) setLoading(false);
+      });
+
+    // 2. Auth State Listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event: string, currentSession: Session | null) => {
+      if (!isMounted) return;
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+
+      if (currentSession?.user) {
+        await fetchProfile(
+          currentSession.user.id,
+          currentSession.user.email || '',
+          currentSession.user.user_metadata
+        );
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase, fetchProfile]);
 
   const signUp = async (
     email: string,
     password: string,
     fullName: string,
     phone: string
-  ): Promise<{ error: Error | null }> => {
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-          fullName: fullName.trim(),
-          phone: phone.trim(),
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        return { error: new Error(data.error || 'Failed to create account. Please try again.') };
-      }
-
-      syncLocalCache(data.user, data.profile, data.session);
-
-      // Best effort background sync with Supabase
-      if (supabase) {
-        supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: { full_name: fullName.trim(), phone: phone.trim() },
-          },
-        }).catch(() => {});
-      }
-
-      return { error: null };
-    } catch (err: any) {
-      return { error: new Error(err.message || 'Network error during account registration.') };
+  ): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase client not initialized') };
     }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = fullName.trim();
+    const cleanPhone = phone.replace(/\D/g, '');
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: {
+        data: {
+          full_name: cleanName,
+          phone: cleanPhone,
+        },
+      },
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    // If session is returned immediately (email confirmation disabled in Supabase)
+    if (data.session && data.user) {
+      setSession(data.session);
+      setUser(data.user);
+      await fetchProfile(data.user.id, cleanEmail, {
+        full_name: cleanName,
+        phone: cleanPhone,
+      });
+    }
+
+    return { data, error: null };
   };
 
-  const signIn = async (
-    email: string,
-    password: string
-  ): Promise<{ error: Error | null }> => {
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        return {
-          error: new Error(
-            data.error || 'Invalid email or password. Please check your credentials.'
-          ),
-        };
-      }
-
-      syncLocalCache(data.user, data.profile, data.session);
-
-      // Best effort background sync with Supabase
-      if (supabase) {
-        supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        }).catch(() => {});
-      }
-
-      return { error: null };
-    } catch (err: any) {
-      return { error: new Error(err.message || 'Network error during sign in.') };
+  const signIn = async (email: string, password: string): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase client not initialized') };
     }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (data.session && data.user) {
+      setSession(data.session);
+      setUser(data.user);
+      await fetchProfile(data.user.id, cleanEmail, data.user.user_metadata);
+    }
+
+    return { data, error: null };
   };
 
   const signOut = async () => {
+    if (!supabase) return;
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // Ignore network errors on logout
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('[ValueCart Auth] Sign out warning:', err);
+    }
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+  };
+
+  const resetPasswordForEmail = async (email: string): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase client not initialized') };
     }
 
-    if (supabase) {
-      try {
-        await supabase.auth.signOut();
-      } catch {
-        // Ignore supabase signout error
-      }
+    const cleanEmail = email.trim().toLowerCase();
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : 'https://valuecart.in');
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+    });
+
+    return { data, error };
+  };
+
+  const resendConfirmationEmail = async (email: string): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase client not initialized') };
     }
 
-    syncLocalCache(null, null, null);
+    const cleanEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email: cleanEmail,
+    });
+
+    return { data, error };
+  };
+
+  const updatePassword = async (newPassword: string): Promise<AuthResponse> => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase client not initialized') };
+    }
+
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    return { data, error };
   };
 
   const refreshProfile = async () => {
-    try {
-      const res = await fetch('/api/auth/session');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          syncLocalCache(data.user, data.profile, data.session);
-        }
-      }
-    } catch {
-      // Ignore
+    if (user) {
+      await fetchProfile(user.id, user.email || '', user.user_metadata);
+    }
+  };
+
+  const refreshSession = async () => {
+    if (!supabase) return;
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
+    setSession(currentSession);
+    setUser(currentSession?.user ?? null);
+    if (currentSession?.user) {
+      await fetchProfile(
+        currentSession.user.id,
+        currentSession.user.email || '',
+        currentSession.user.user_metadata
+      );
     }
   };
 
@@ -238,7 +304,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signOut,
+        resetPasswordForEmail,
+        resendConfirmationEmail,
+        updatePassword,
         refreshProfile,
+        refreshSession,
       }}
     >
       {children}
