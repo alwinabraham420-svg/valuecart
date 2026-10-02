@@ -14,6 +14,9 @@ import {
   Lock,
   AlertCircle,
   Check,
+  Plus,
+  Minus,
+  Trash2,
 } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 import { useAdmin } from '@/context/AdminContext';
@@ -25,7 +28,7 @@ import { PRODUCTS } from '@/data/products';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, cartSubtotal, cartShipping, cartGrandTotal, clearCart, addToCart, addToast } = useStore();
+  const { cart, cartSubtotal, cartShipping, cartGrandTotal, clearCart, addToCart, addToast, updateQuantity, removeFromCart } = useStore();
   const { addOrder } = useAdmin();
   const { user, profile, loading: authLoading } = useAuth();
 
@@ -962,9 +965,9 @@ export default function CheckoutPage() {
             </h2>
 
             {/* Product items thumbnail list */}
-            <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+            <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
               {cart.map((item) => (
-                <div key={item.product.id} className="flex items-center gap-3 text-xs">
+                <div key={`${item.product.id}-${item.selectedSize || 'default'}`} className="flex items-start gap-3 text-xs">
                   <div className="relative w-14 h-14 rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
                     <img
                       src={item.product.image}
@@ -973,17 +976,58 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-valuecart-navy truncate">
+                    <div className="font-bold text-valuecart-navy truncate text-xs sm:text-sm">
                       {item.product.name}
                     </div>
-                    <div className="text-valuecart-text-muted mt-0.5">
-                      Quantity: <strong className="text-valuecart-navy">{item.quantity}</strong>
-                    </div>
-                    <div className="font-bold text-valuecart-green mt-0.5">
+                    {item.selectedSize && (
+                      <div className="text-[11px] text-valuecart-text-muted mt-0.5">
+                        Size: <span className="font-bold text-valuecart-navy">{item.selectedSize}</span>
+                      </div>
+                    )}
+                    <div className="font-bold text-valuecart-green text-[11px] mt-0.5">
                       ₹{item.product.price} each
                     </div>
+
+                    {/* Quantity Edit Controls */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="inline-flex items-center bg-gray-50 border border-gray-200 rounded-lg">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
+                          className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-valuecart-navy hover:bg-gray-200/60 disabled:opacity-30 disabled:cursor-not-allowed rounded-l-lg transition-colors cursor-pointer"
+                          aria-label="Decrease quantity"
+                          title="Decrease quantity"
+                        >
+                          <Minus className="w-3 h-3 stroke-[2.5]" />
+                        </button>
+                        <span className="w-7 text-center font-black text-valuecart-navy text-xs">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-valuecart-navy hover:bg-gray-200/60 rounded-r-lg transition-colors cursor-pointer"
+                          aria-label="Increase quantity"
+                          title="Increase quantity"
+                        >
+                          <Plus className="w-3 h-3 stroke-[2.5]" />
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeFromCart(item.product.id)}
+                        className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                        title="Remove product"
+                        aria-label="Remove product"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="font-black text-valuecart-navy text-sm">
+
+                  <div className="font-black text-valuecart-navy text-sm shrink-0 pt-0.5">
                     ₹{item.product.price * item.quantity}
                   </div>
                 </div>
