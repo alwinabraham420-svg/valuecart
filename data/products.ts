@@ -107,8 +107,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Elevate your daily rotation with this premium breathable cotton blend shirt. Tailored for all-day comfort in tropical Indian weather with reinforced stitching and a crisp spread collar.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     featured: false,
     deal: false,
     badge: 'Deal of the Day',
@@ -160,8 +160,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1544233726-9f1d2b27be8b?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Tough 3-layer German granite non-stick coating suitable for gas stove and induction cooking. Requires minimal oil for healthy, flavorful Indian recipes.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     featured: false,
     deal: false,
     badge: 'Best Value',
@@ -204,8 +204,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Water-resistant, ergonomic commuter backpack with cushioned 15.6" laptop compartment, USB charging pass-through, and anti-theft hidden pocket.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     featured: false,
     deal: false,
     badge: 'Popular',
@@ -254,8 +254,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Immersive sound with 13mm dynamic drivers, environmental noise cancellation (ENC) for crystal clear calling, 40 hours total playtime and Type-C fast charging.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     featured: false,
     deal: false,
     badge: 'Hot Deal',
@@ -303,8 +303,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1591129841117-3adfd313e34f?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Modular clear cosmetic and tabletop storage organizer with smooth slide drawers. Keeps cosmetics, stationery, medicines, and daily trinkets neatly arranged.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     featured: false,
     deal: false,
     badge: 'Home Must-Have',
@@ -347,8 +347,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Catchy floral and botanical prints on super-soft rayon cotton fabric. Ideal for weekend outings, vacations, or casual Fridays.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     bestSeller: false,
     variants: {
       sizes: ['S', 'M', 'L', 'XL'],
@@ -394,8 +394,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Save 70% of kitchen prep time with this heavy-duty manual string chopper equipped with 3 surgical grade stainless steel curved blades and anti-skid silicone base.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     bestSeller: false,
     specs: {
       'Capacity': '650 ml Large Bowl',
@@ -434,8 +434,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Compact crossbody sling bag designed for quick access to your phone, wallet, passport, keys, and mini tablet during travel or daily commute.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     bestSeller: false,
     variants: {
       colors: [
@@ -480,8 +480,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Double-walled vacuum insulated flask keeping drinks ice-cold for 24 hours or steaming hot for 12 hours. 100% leakproof spout lid.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     bestSeller: false,
     variants: {
       colors: [
@@ -527,8 +527,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Handcrafted Rayon Anarkali Kurti with delicate neckline zari embroidery and flared hemline. Comfortable for festive gatherings or casual wear.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     bestSeller: false,
     variants: {
       sizes: ['M', 'L', 'XL', 'XXL'],
@@ -575,8 +575,8 @@ export const PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?auto=format&fit=crop&w=800&q=80',
     ],
     description: 'Ergonomic in-ear Bluetooth true wireless earbuds with deep punchy bass, smart touch controls, and pocket-sized charging case.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     bestSeller: false,
     variants: {
       colors: [
@@ -618,8 +618,8 @@ export const PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80',
     images: ['https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80'],
     description: 'Toxin-free healthy cooking pan with natural mineral coating. Perfect for dosas, omelets, and shallow stir-frying.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     specs: { 'Diameter': '26 cm', 'Coating': 'Natural Ceramic Non-toxic' },
     economics: {
       supplierName: 'Rajkot Cookware (Meesho #552)',
@@ -650,8 +650,8 @@ export const PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
     images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80'],
     description: 'High-definition 40mm drivers deliver balanced bass and crystal-clear vocals. Memory foam ear cushions ensure comfortable extended listening sessions.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     featured: false,
     specs: { 'Playtime': '50 Hours', 'Audio Drivers': '40mm Neodymium', 'Connectivity': 'Bluetooth 5.2 + 3.5mm Aux' },
     economics: {
@@ -683,8 +683,8 @@ export const PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=600&q=80',
     images: ['https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=800&q=80'],
     description: 'Infused with organic aloe vera, vitamin C and turmeric extracts to brighten skin and restore natural moisture balance.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     specs: { 'Volume': '30ml Serum + 100ml Cleanser', 'Skin Type': 'All Skin Types' },
     economics: {
       supplierName: 'Haridwar Herbals (Meesho #290)',
@@ -715,8 +715,8 @@ export const PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
     images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'],
     description: 'Subtle midnight blue dial with stainless steel casing and genuine leather strap. Water-resistant up to 30 meters.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     specs: { 'Movement': 'Japanese Quartz', 'Water Resistance': '3 ATM', 'Case Diameter': '42mm' },
     economics: {
       supplierName: 'Morbi Timepieces (Meesho #680)',
@@ -747,8 +747,8 @@ export const PRODUCTS: Product[] = [
     image: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=600&q=80',
     images: ['https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=800&q=80'],
     description: 'Solid cast iron core with anti-roll hexagonal rubber casing for quiet home gym workouts without scratching tiles.',
-    stock: 50,
-    isAvailable: true,
+    stock: 0,
+    isAvailable: false,
     specs: { 'Weight': '2 x 3kg (6kg Total)', 'Grip': 'Ergonomic Chrome Knurled Handle' },
     economics: {
       supplierName: 'Jalandhar Sports Goods (Meesho #118)',
@@ -790,3 +790,18 @@ export const PROMO_BANNERS = [
     image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80',
   },
 ];
+
+export function isProductInStock(
+  product: Product | { isAvailable?: boolean; stock?: number; stock_quantity?: number } | null | undefined
+): boolean {
+  if (!product) return false;
+  if (product.isAvailable === false) return false;
+  const stock =
+    'stock' in product && typeof product.stock === 'number'
+      ? product.stock
+      : 'stock_quantity' in product && typeof product.stock_quantity === 'number'
+      ? product.stock_quantity
+      : 0;
+  return stock > 0;
+}
+

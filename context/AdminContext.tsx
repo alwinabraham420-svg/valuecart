@@ -245,6 +245,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           if (isRoleAdmin) {
             setIsAdminAuthenticated(true);
             await fetchOrdersFromDb();
+            await fetchProductsFromDb();
           }
         }
       } catch (err) {
@@ -311,6 +312,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
       setIsAdminAuthenticated(true);
       await fetchOrdersFromDb();
+      await fetchProductsFromDb();
       return true;
     } catch {
       return false;
@@ -388,6 +390,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const fetchProductsFromDb = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/products');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching admin products:', err);
+    }
+  }, []);
+
   const addOrder = (newOrder: Order) => {
     setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
   };
@@ -396,10 +412,25 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return orders.find((o) => o.id === orderId || o.orderNumber === orderId);
   };
 
-  const updateProduct = (productId: string, updates: Partial<Product>) => {
+  const updateProduct = async (productId: string, updates: Partial<Product>) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, ...updates } : p))
     );
+
+    try {
+      const prod = products.find((p) => p.id === productId);
+      await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId,
+          slug: prod?.slug,
+          updates,
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to sync product update with backend:', err);
+    }
   };
 
   const addProduct = (product: Product) => {

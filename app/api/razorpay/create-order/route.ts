@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
           if (dbProduct) {
             if (!dbProduct.is_active || (dbProduct.stock_quantity !== null && dbProduct.stock_quantity <= 0)) {
               return NextResponse.json(
-                { error: `Product "${dbProduct.name}" is currently out of stock or unavailable.` },
+                { error: `Sorry, product "${dbProduct.name}" is currently out of stock.` },
                 { status: 400 }
               );
             }
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         if (staticProd) {
           if (!staticProd.isAvailable || staticProd.stock <= 0) {
             return NextResponse.json(
-              { error: `Product "${staticProd.name}" is currently out of stock.` },
+              { error: `Sorry, product "${staticProd.name}" is currently out of stock.` },
               { status: 400 }
             );
           }

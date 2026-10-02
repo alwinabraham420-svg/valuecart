@@ -162,6 +162,10 @@ export default function CheckoutPage() {
     return Object.keys(errors).length === 0;
   };
 
+  const hasUnavailableItems = cart.some(
+    (item) => item.product.isAvailable === false || (typeof item.product.stock === 'number' && item.product.stock <= 0)
+  );
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -172,6 +176,11 @@ export default function CheckoutPage() {
 
     if (cart.length === 0) {
       addToast('Cart is Empty', 'Please select a product before checking out.', 'warning');
+      return;
+    }
+
+    if (hasUnavailableItems) {
+      addToast('Out of Stock', 'One or more items in your cart are currently out of stock. Please remove them before placing an order.', 'warning');
       return;
     }
 
@@ -1001,14 +1010,22 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {hasUnavailableItems && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-800">
+                ⚠️ One or more items in your cart are currently out of stock. Please remove them before placing an order.
+              </div>
+            )}
+
             {/* Place Order CTA Button */}
             <button
               type="submit"
-              disabled={isPlacingOrder || cart.length === 0}
-              className="w-full bg-valuecart-green hover:bg-valuecart-green-dark active:scale-[0.99] disabled:opacity-50 text-white font-extrabold py-4 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base shadow-md hover:shadow-lg transition-all cursor-pointer"
+              disabled={isPlacingOrder || cart.length === 0 || hasUnavailableItems}
+              className="w-full bg-valuecart-green hover:bg-valuecart-green-dark active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold py-4 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base shadow-md hover:shadow-lg transition-all cursor-pointer"
             >
               {isPlacingOrder ? (
                 <span>Placing Order...</span>
+              ) : hasUnavailableItems ? (
+                <span>REMOVE OUT OF STOCK ITEMS TO CONTINUE</span>
               ) : (
                 <>
                   <span>

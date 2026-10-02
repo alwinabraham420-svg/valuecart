@@ -32,6 +32,9 @@ export default function CartPage() {
 
   const freeShippingThreshold = 499;
   const remainingForFree = Math.max(0, freeShippingThreshold - cartSubtotal);
+  const hasUnavailableItems = cart.some(
+    (item) => item.product.isAvailable === false || (typeof item.product.stock === 'number' && item.product.stock <= 0)
+  );
 
   if (cart.length === 0) {
     return (
@@ -93,9 +96,17 @@ export default function CartPage() {
             </Link>
           </div>
 
+          {/* Out of Stock Alert Banner */}
+          {hasUnavailableItems && (
+            <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 flex items-center gap-2 text-xs sm:text-sm text-rose-800 font-semibold">
+              <span>⚠️ One or more items in your cart are currently out of stock. Please remove them to proceed.</span>
+            </div>
+          )}
+
           {/* Cart Table / Items */}
           <div className="bg-white rounded-3xl border border-valuecart-border/80 shadow-soft divide-y divide-gray-100 overflow-hidden">
             {cart.map((item) => {
+              const isItemOutOfStock = item.product.isAvailable === false || (typeof item.product.stock === 'number' && item.product.stock <= 0);
               const lineTotal = item.product.price * item.quantity;
               const lineSavings = (item.product.originalPrice - item.product.price) * item.quantity;
 
@@ -116,9 +127,16 @@ export default function CartPage() {
                     </div>
 
                     <div className="space-y-1 min-w-0">
-                      <span className="text-[11px] font-bold text-valuecart-green uppercase tracking-wider">
-                        {item.product.category}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-valuecart-green uppercase tracking-wider">
+                          {item.product.category}
+                        </span>
+                        {isItemOutOfStock && (
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                            Out of Stock
+                          </span>
+                        )}
+                      </div>
                       <Link
                         href={`/product/${item.product.slug}`}
                         className="text-sm sm:text-base font-bold text-valuecart-navy hover:text-valuecart-green block transition-colors truncate"
@@ -268,13 +286,23 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Link
-              href="/checkout"
-              className="w-full bg-valuecart-green hover:bg-valuecart-green-dark active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm shadow-md transition-all block text-center"
-            >
-              <span>Proceed to Checkout</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {hasUnavailableItems ? (
+              <button
+                type="button"
+                disabled
+                className="w-full bg-gray-200 text-gray-500 font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm cursor-not-allowed select-none"
+              >
+                <span>Remove Out of Stock Items to Checkout</span>
+              </button>
+            ) : (
+              <Link
+                href="/checkout"
+                className="w-full bg-valuecart-green hover:bg-valuecart-green-dark active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm shadow-md transition-all block text-center"
+              >
+                <span>Proceed to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
 
             <div className="pt-2 border-t border-gray-100 space-y-2 text-xs text-valuecart-text-muted">
               <div className="flex items-center gap-2">

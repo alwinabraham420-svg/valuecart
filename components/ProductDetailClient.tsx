@@ -55,7 +55,7 @@ export default function ProductDetailClient({
 
   const isOutOfStock =
     product.isAvailable === false ||
-    (typeof product.stock === 'number' && product.stock <= 0 && product.slug !== 'stainless-steel-chopping-board');
+    (typeof product.stock === 'number' && product.stock <= 0);
   const images = product.images && product.images.length > 0 ? product.images : [product.image];
   const isWishlisted = isInWishlist(product.id);
 
@@ -96,6 +96,10 @@ export default function ProductDetailClient({
   };
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      addToast('Product Unavailable', 'Sorry, this product is currently out of stock.', 'warning');
+      return;
+    }
     setIsAdding(true);
     addToCart(product, quantity);
     trackAddToCart(product, quantity);
@@ -105,6 +109,10 @@ export default function ProductDetailClient({
   };
 
   const handleBuyNow = () => {
+    if (isOutOfStock) {
+      addToast('Product Unavailable', 'Sorry, this product is currently out of stock.', 'warning');
+      return;
+    }
     setIsBuying(true);
     buyNow(product, quantity);
     trackAddToCart(product, quantity);
@@ -330,14 +338,24 @@ export default function ProductDetailClient({
 
             {/* Rating & Stock Status */}
             <div className="flex items-center gap-3 mt-3 text-xs sm:text-sm">
-              <span className={`font-semibold flex items-center gap-1 px-2.5 py-0.5 rounded-md ${
-                !isOutOfStock ? 'text-valuecart-green bg-valuecart-green-tint' : 'text-gray-600 bg-gray-100'
+              <span className={`font-bold flex items-center gap-1.5 px-3 py-1 rounded-full text-xs ${
+                !isOutOfStock
+                  ? 'text-valuecart-green bg-valuecart-green-tint border border-emerald-200'
+                  : 'text-rose-700 bg-rose-50 border border-rose-200'
               }`}>
-                <Check className="w-4 h-4 stroke-[2.5]" /> {!isOutOfStock ? 'In Stock' : 'Out of Stock'}
+                {!isOutOfStock ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" /> In Stock
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" /> Out of Stock (Will Restock Soon)
+                  </>
+                )}
               </span>
               <span className="text-gray-300">•</span>
               <span className="text-valuecart-text-muted font-medium">
-                100% Genuine 304 Food-Grade Stainless Steel
+                {product.category}
               </span>
             </div>
 
@@ -396,11 +414,13 @@ export default function ProductDetailClient({
               <span className="text-xs font-bold text-valuecart-navy uppercase tracking-wider">
                 Quantity:
               </span>
-              <div className="flex items-center border-2 border-gray-200 rounded-2xl bg-white overflow-hidden shadow-2xs">
+              <div className={`flex items-center border-2 border-gray-200 rounded-2xl bg-white overflow-hidden shadow-2xs ${
+                isOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+              }`}>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  disabled={quantity <= 1}
+                  disabled={isOutOfStock || quantity <= 1}
                   className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 text-valuecart-navy font-bold text-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Decrease quantity"
                 >
@@ -412,7 +432,8 @@ export default function ProductDetailClient({
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-                  className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 text-valuecart-navy font-bold text-lg transition-colors cursor-pointer"
+                  disabled={isOutOfStock || quantity >= 10}
+                  className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 text-valuecart-navy font-bold text-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Increase quantity"
                 >
                   +
@@ -425,13 +446,32 @@ export default function ProductDetailClient({
 
             {/* Primary Action Buttons: ADD TO CART & BUY NOW */}
             {isOutOfStock ? (
-              <div className="mt-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center">
-                <span className="font-bold text-amber-800 text-sm sm:text-base block">
-                  Out of Stock • Restock Soon
-                </span>
-                <p className="text-xs text-amber-700 mt-1">
-                  This item is currently unavailable for order. Check back shortly.
-                </p>
+              <div className="mt-6 space-y-3">
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center">
+                  <span className="font-extrabold text-amber-900 text-sm sm:text-base block">
+                    Out of Stock • Will Restock Soon
+                  </span>
+                  <p className="text-xs text-amber-700 mt-1">
+                    This item is currently unavailable for purchase. Keep browsing our store for available everyday essentials.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    disabled
+                    className="flex-1 bg-gray-100 border border-gray-200 text-gray-400 font-bold py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 text-sm sm:text-base cursor-not-allowed select-none"
+                  >
+                    <ShoppingCart className="w-5 h-5 text-gray-400" />
+                    <span>OUT OF STOCK</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="flex-1 bg-gray-100 border border-gray-200 text-gray-400 font-bold py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 text-sm sm:text-base cursor-not-allowed select-none"
+                  >
+                    <span>WILL RESTOCK SOON</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
@@ -751,8 +791,8 @@ export default function ProductDetailClient({
 
         <div className="flex items-center gap-2 flex-1 max-w-[240px]">
           {isOutOfStock ? (
-            <span className="flex-1 text-center py-2.5 px-3 rounded-xl bg-amber-50 text-amber-800 font-bold text-xs border border-amber-200">
-              Restock Soon
+            <span className="flex-1 text-center py-2.5 px-3 rounded-xl bg-gray-100 text-gray-500 font-bold text-xs border border-gray-200 select-none cursor-not-allowed">
+              OUT OF STOCK
             </span>
           ) : (
             <>

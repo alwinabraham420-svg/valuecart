@@ -16,9 +16,14 @@ interface ProductCardProps {
 export default function ProductCard({ product, className = '' }: ProductCardProps) {
   const { addToCart, setQuickViewProduct } = useStore();
 
+  const isOutOfStock =
+    product.isAvailable === false ||
+    (typeof product.stock === 'number' && product.stock <= 0);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     addToCart(product, 1);
   };
 
@@ -42,9 +47,9 @@ export default function ProductCard({ product, className = '' }: ProductCardProp
       {/* Product Image Area */}
       <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#F8F9FA] mb-3">
         {/* Stock / Discount Badge (Top Left) */}
-        {product.isAvailable === false || (product.stock !== undefined && product.stock <= 0 && product.slug !== 'stainless-steel-chopping-board') ? (
-          <div className="absolute top-2 left-2 z-10 bg-gray-700/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-            Restock Soon
+        {isOutOfStock ? (
+          <div className="absolute top-2 left-2 z-10 bg-gray-800 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
+            OUT OF STOCK
           </div>
         ) : product.discount > 0 ? (
           <div className="absolute top-2 left-2 z-10 bg-[#EF4444] text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
@@ -121,7 +126,7 @@ export default function ProductCard({ product, className = '' }: ProductCardProp
         </div>
 
         {/* Action Button */}
-        {product.isAvailable !== false && (product.stock === undefined || product.stock > 0 || product.slug === 'stainless-steel-chopping-board') ? (
+        {!isOutOfStock ? (
           <button
             type="button"
             onClick={handleAddToCart}
@@ -132,8 +137,8 @@ export default function ProductCard({ product, className = '' }: ProductCardProp
             <span>Add to Cart</span>
           </button>
         ) : (
-          <div className="mt-3 w-full bg-gray-100 text-gray-500 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed select-none border border-gray-200/60">
-            <span>Restocking Soon</span>
+          <div className="mt-3 w-full bg-gray-100 text-gray-500 text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed select-none border border-gray-200/80">
+            <span>WILL RESTOCK SOON</span>
           </div>
         )}
       </div>

@@ -109,12 +109,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Auto-sanitize cart on mount: remove any items that are currently out of stock
+  useEffect(() => {
+    setCart((prev) => {
+      const sanitized = prev.filter((item) => {
+        const catalogProd = PRODUCTS.find((p) => p.id === item.product.id || p.slug === item.product.slug);
+        const inStock = catalogProd
+          ? (catalogProd.isAvailable !== false && (catalogProd.stock ?? 0) > 0)
+          : (item.product.isAvailable !== false && (item.product.stock ?? 0) > 0);
+        return inStock;
+      });
+      return sanitized;
+    });
+  }, []);
+
   const addToCart = (product: Product, quantity = 1, selectedSize?: string, selectedColor?: string) => {
     const cleanQty = Math.max(1, Math.min(10, Math.floor(quantity)));
     // Verify product is in stock and available
-    const inStock = product.isAvailable !== false && (product.stock === undefined || product.stock > 0 || product.slug === 'stainless-steel-chopping-board');
+    const inStock = product.isAvailable !== false && (typeof product.stock === 'number' ? product.stock > 0 : true);
     if (!inStock) {
-      addToast('Product Unavailable', 'This product is currently out of stock or restocking soon.', 'warning');
+      addToast('Product Unavailable', 'Sorry, this product is currently out of stock.', 'warning');
       return;
     }
 
@@ -137,9 +151,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const buyNow = (product: Product, quantity = 1, selectedSize?: string, selectedColor?: string) => {
     const cleanQty = Math.max(1, Math.min(10, Math.floor(quantity)));
-    const inStock = product.isAvailable !== false && (product.stock === undefined || product.stock > 0 || product.slug === 'stainless-steel-chopping-board');
+    const inStock = product.isAvailable !== false && (typeof product.stock === 'number' ? product.stock > 0 : true);
     if (!inStock) {
-      addToast('Product Unavailable', 'This product is currently out of stock.', 'warning');
+      addToast('Product Unavailable', 'Sorry, this product is currently out of stock.', 'warning');
       return;
     }
 

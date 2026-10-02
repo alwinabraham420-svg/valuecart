@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       // Check Supabase products table first if connected
       if (supabase) {
         try {
-          let query = supabase.from('products').select('id, name, slug, selling_price, primary_image, is_active');
+          let query = supabase.from('products').select('id, name, slug, selling_price, primary_image, is_active, stock_quantity');
           if (isUuid && slugToLookup) {
             query = query.or(`id.eq.${item.productId},slug.eq.${slugToLookup}`);
           } else if (isUuid) {
@@ -80,6 +80,14 @@ export async function POST(req: NextRequest) {
           const { data: dbProduct, error: dbError } = await query.maybeSingle();
 
           if (!dbError && dbProduct) {
+            // Verify stock availability
+            if (!dbProduct.is_active || (dbProduct.stock_quantity !== null && dbProduct.stock_quantity <= 0)) {
+              return NextResponse.json(
+                { error: `Sorry, product "${dbProduct.name}" is currently out of stock.` },
+                { status: 400 }
+              );
+            }
+
             officialPrice = Number(dbProduct.selling_price);
             officialName = dbProduct.name;
             officialSlug = dbProduct.slug;
@@ -110,6 +118,13 @@ export async function POST(req: NextRequest) {
           (p) => p.id === item.productId || p.slug === slugToLookup
         );
         if (staticProd) {
+          if (!staticProd.isAvailable || staticProd.stock <= 0) {
+            return NextResponse.json(
+              { error: `Sorry, product "${staticProd.name}" is currently out of stock.` },
+              { status: 400 }
+            );
+          }
+
           officialPrice = staticProd.price;
           officialName = staticProd.name;
           officialSlug = staticProd.slug;

@@ -17,14 +17,19 @@ export default function ProductQuickView() {
   if (!quickViewProduct) return null;
 
   const product = quickViewProduct;
+  const isOutOfStock =
+    product.isAvailable === false ||
+    (typeof product.stock === 'number' && product.stock <= 0);
   const images = product.images && product.images.length > 0 ? product.images : [product.image];
 
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     addToCart(product, quantity, selectedSize);
     setQuickViewProduct(null);
   };
 
   const handleBuyNow = () => {
+    if (isOutOfStock) return;
     buyNow(product, quantity, selectedSize);
     setQuickViewProduct(null);
     router.push('/checkout');
@@ -63,9 +68,15 @@ export default function ProductQuickView() {
                   className="object-cover"
                 />
                 <div className="absolute top-3 left-3">
-                  <span className="bg-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
-                    -{product.discount}% OFF
-                  </span>
+                  {isOutOfStock ? (
+                    <span className="bg-gray-800 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+                      OUT OF STOCK
+                    </span>
+                  ) : product.discount > 0 ? (
+                    <span className="bg-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
+                      -{product.discount}% OFF
+                    </span>
+                  ) : null}
                 </div>
                 <div className="absolute top-3 right-3">
                   <WishlistButton productId={product.id} />
@@ -110,14 +121,16 @@ export default function ProductQuickView() {
                   {product.name}
                 </h2>
 
-                {/* Rating */}
+                {/* Rating & Stock */}
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md text-xs font-bold">
                     <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                     <span>{product.rating}</span>
                   </div>
-                  <span className="text-xs text-valuecart-text-muted">
-                    ({product.reviewCount} customer reviews)
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                    !isOutOfStock ? 'text-valuecart-green bg-valuecart-green-tint' : 'text-rose-700 bg-rose-50'
+                  }`}>
+                    {!isOutOfStock ? 'In Stock' : 'Out of Stock'}
                   </span>
                 </div>
 
@@ -131,9 +144,11 @@ export default function ProductQuickView() {
                       ₹{product.originalPrice}
                     </span>
                   )}
-                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    Save ₹{product.originalPrice - product.price}
-                  </span>
+                  {product.originalPrice > product.price && (
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      Save ₹{product.originalPrice - product.price}
+                    </span>
+                  )}
                 </div>
 
                 {/* Short description */}
@@ -176,11 +191,13 @@ export default function ProductQuickView() {
                       Total: ₹{product.price * quantity}
                     </span>
                   </div>
-                  <div className="inline-flex items-center border-2 border-gray-200 rounded-xl bg-white shadow-xs">
+                  <div className={`inline-flex items-center border-2 border-gray-200 rounded-xl bg-white shadow-xs ${
+                    isOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+                  }`}>
                     <button
                       type="button"
                       onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                      disabled={quantity <= 1}
+                      disabled={isOutOfStock || quantity <= 1}
                       className="w-10 h-10 flex items-center justify-center text-valuecart-navy hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent rounded-l-lg transition-colors text-base font-bold"
                       aria-label="Decrease quantity"
                     >
@@ -192,7 +209,8 @@ export default function ProductQuickView() {
                     <button
                       type="button"
                       onClick={() => setQuantity((prev) => Math.min(10, prev + 1))}
-                      className="w-10 h-10 flex items-center justify-center text-valuecart-navy hover:bg-gray-100 rounded-r-lg transition-colors text-base font-bold"
+                      disabled={isOutOfStock || quantity >= 10}
+                      className="w-10 h-10 flex items-center justify-center text-valuecart-navy hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent rounded-r-lg transition-colors text-base font-bold"
                       aria-label="Increase quantity"
                     >
                       <Plus className="w-4 h-4" />
@@ -203,24 +221,44 @@ export default function ProductQuickView() {
 
               {/* Actions */}
               <div className="mt-6 pt-4 border-t border-gray-100 space-y-3">
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    className="flex-1 bg-valuecart-green hover:bg-valuecart-green-dark active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-all"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Add to Cart</span>
-                  </button>
+                {isOutOfStock ? (
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      disabled
+                      className="flex-1 bg-gray-100 border border-gray-200 text-gray-400 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm cursor-not-allowed select-none"
+                    >
+                      <ShoppingCart className="w-4 h-4 text-gray-400" />
+                      <span>OUT OF STOCK</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled
+                      className="flex-1 bg-gray-100 border border-gray-200 text-gray-400 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm cursor-not-allowed select-none"
+                    >
+                      <span>WILL RESTOCK SOON</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      className="flex-1 bg-valuecart-green hover:bg-valuecart-green-dark active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-all cursor-pointer"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Add to Cart</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={handleBuyNow}
-                    className="flex-1 bg-valuecart-navy hover:bg-valuecart-navy-light active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-all"
-                  >
-                    <span>Buy Now</span>
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={handleBuyNow}
+                      className="flex-1 bg-valuecart-navy hover:bg-valuecart-navy-light active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-all cursor-pointer"
+                    >
+                      <span>Buy Now</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Trust mini banner */}
                 <div className="flex items-center justify-between text-[11px] text-valuecart-text-muted pt-1">

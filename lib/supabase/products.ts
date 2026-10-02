@@ -19,6 +19,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     if (!error && data) {
       const specs = (data.specs as Record<string, unknown>) || {};
       const categoryData = Array.isArray(data.categories) ? data.categories[0] : data.categories;
+      const stockQty = typeof data.stock_quantity === 'number' ? data.stock_quantity : (data.slug === 'stainless-steel-chopping-board' ? 120 : 0);
+      const isAvail = Boolean(data.is_active !== false && stockQty > 0);
 
       return {
         id: data.id,
@@ -35,8 +37,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         image: data.primary_image,
         images: Array.isArray(data.images) ? data.images : [data.primary_image],
         description: data.description || '',
-        stock: (typeof data.stock_quantity === 'number' && data.stock_quantity > 0) ? data.stock_quantity : 100,
-        isAvailable: data.is_active !== false,
+        stock: stockQty,
+        isAvailable: isAvail,
         featured: data.is_deal || false,
         bestSeller: data.is_bestseller || false,
         deal: data.is_deal || false,
@@ -75,6 +77,8 @@ export async function getAllProducts(): Promise<Product[]> {
       return data.map((item) => {
         const specs = (item.specs as Record<string, unknown>) || {};
         const categoryData = Array.isArray(item.categories) ? item.categories[0] : item.categories;
+        const stockQty = typeof item.stock_quantity === 'number' ? item.stock_quantity : (item.slug === 'stainless-steel-chopping-board' ? 120 : 0);
+        const isAvail = Boolean(item.is_active !== false && stockQty > 0);
 
         return {
           id: item.id,
@@ -91,8 +95,8 @@ export async function getAllProducts(): Promise<Product[]> {
           image: item.primary_image,
           images: Array.isArray(item.images) ? item.images : [item.primary_image],
           description: item.description || '',
-          stock: (typeof item.stock_quantity === 'number' && item.stock_quantity > 0) ? item.stock_quantity : 100,
-          isAvailable: item.is_active !== false,
+          stock: stockQty,
+          isAvailable: isAvail,
           featured: item.is_deal || false,
           bestSeller: item.is_bestseller || false,
           deal: item.is_deal || false,

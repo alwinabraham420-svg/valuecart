@@ -44,6 +44,8 @@ export default function AdminProductsPage() {
   const [supplierProductId, setSupplierProductId] = useState('');
   const [isCodAvailable, setIsCodAvailable] = useState(true);
   const [isActive, setIsActive] = useState(true);
+  const [stock, setStock] = useState(0);
+  const [isAvailable, setIsAvailable] = useState(false);
   const [image, setImage] = useState('');
 
   const openEditModal = (p: Product) => {
@@ -54,6 +56,8 @@ export default function AdminProductsPage() {
     setCategorySlug(p.categorySlug);
     setPrice(p.price);
     setOriginalPrice(p.originalPrice);
+    setStock(typeof p.stock === 'number' ? p.stock : 0);
+    setIsAvailable(Boolean(p.isAvailable !== false && (p.stock ?? 0) > 0));
     setSupplierCost(p.economics?.supplierCost || Math.round(p.price * 0.45));
     setTargetCac(p.economics?.targetCac || 150);
     setAdvertisingCost(p.economics?.advertisingCost || 140);
@@ -74,6 +78,8 @@ export default function AdminProductsPage() {
     setCategorySlug('home-kitchen');
     setPrice(599);
     setOriginalPrice(1199);
+    setStock(50);
+    setIsAvailable(true);
     setSupplierCost(210);
     setTargetCac(160);
     setAdvertisingCost(150);
@@ -117,6 +123,8 @@ export default function AdminProductsPage() {
         category,
         categorySlug,
         image,
+        stock: Number(stock),
+        isAvailable: Boolean(isAvailable && Number(stock) > 0),
         economics: economicsData,
       });
     } else {
@@ -134,7 +142,8 @@ export default function AdminProductsPage() {
         image,
         images: [image],
         description: `${name} sourced for everyday value and comfort.`,
-        stock: 50,
+        stock: Number(stock),
+        isAvailable: Boolean(isAvailable && Number(stock) > 0),
         economics: economicsData,
       };
       addProduct(newProd);
@@ -259,14 +268,36 @@ export default function AdminProductsPage() {
                     </td>
 
                     <td className="p-4 whitespace-nowrap">
-                      {prod.stock > 0 && prod.isAvailable ? (
-                        <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                          Active (Stock: {prod.stock})
-                        </span>
+                      {prod.stock > 0 && prod.isAvailable !== false ? (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                            IN STOCK ({prod.stock})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateProduct(prod.id, { stock: 0, isAvailable: false })}
+                            className="text-[10px] font-bold px-2 py-0.5 rounded border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer"
+                            title="Mark Out of Stock"
+                          >
+                            Set Out of Stock
+                          </button>
+                        </div>
                       ) : (
-                        <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                          Restock Soon (Stock: 0)
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800">
+                            <X className="w-3 h-3 stroke-[3]" />
+                            OUT OF STOCK
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateProduct(prod.id, { stock: 50, isAvailable: true })}
+                            className="text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
+                            title="Restock with 50 units"
+                          >
+                            Restock (50)
+                          </button>
+                        </div>
                       )}
                     </td>
 
@@ -431,6 +462,44 @@ export default function AdminProductsPage() {
                     onChange={(e) => setOriginalPrice(Number(e.target.value))}
                     required
                     className="w-full h-10 px-3 rounded-xl border border-gray-200 text-valuecart-navy text-xs focus:ring-1 focus:ring-valuecart-green focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-valuecart-navy mb-1">
+                    Stock Availability Status *
+                  </label>
+                  <select
+                    value={isAvailable ? 'in_stock' : 'out_of_stock'}
+                    onChange={(e) => {
+                      const inStock = e.target.value === 'in_stock';
+                      setIsAvailable(inStock);
+                      if (inStock && stock <= 0) setStock(50);
+                      if (!inStock) setStock(0);
+                    }}
+                    className="w-full h-10 px-3 rounded-xl border border-gray-200 text-valuecart-navy text-xs font-bold focus:ring-1 focus:ring-valuecart-green focus:outline-none"
+                  >
+                    <option value="in_stock">IN STOCK (Purchasable)</option>
+                    <option value="out_of_stock">OUT OF STOCK (Browsing Only)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-valuecart-navy mb-1">
+                    Stock Quantity (Units) *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={stock}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setStock(val);
+                      if (val > 0) setIsAvailable(true);
+                      else setIsAvailable(false);
+                    }}
+                    required
+                    className="w-full h-10 px-3 rounded-xl border border-gray-200 text-valuecart-navy text-xs font-bold focus:ring-1 focus:ring-valuecart-green focus:outline-none"
                   />
                 </div>
 
