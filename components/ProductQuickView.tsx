@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/image';
-import { X, Star, ShoppingCart, ArrowRight, ShieldCheck, Truck, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { X, Star, ShoppingCart, ArrowRight, ShieldCheck, Truck, Check, Minus, Plus } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 import WishlistButton from './WishlistButton';
 
 export default function ProductQuickView() {
-  const { quickViewProduct, setQuickViewProduct, addToCart, openCart } = useStore();
+  const router = useRouter();
+  const { quickViewProduct, setQuickViewProduct, addToCart, buyNow } = useStore();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
@@ -24,9 +25,9 @@ export default function ProductQuickView() {
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity, selectedSize);
+    buyNow(product, quantity, selectedSize);
     setQuickViewProduct(null);
-    openCart();
+    router.push('/checkout');
   };
 
   return (
@@ -164,6 +165,40 @@ export default function ProductQuickView() {
                     </div>
                   </div>
                 )}
+
+                {/* Quantity Selector */}
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-valuecart-navy">
+                      Quantity:
+                    </label>
+                    <span className="text-xs font-bold text-valuecart-navy">
+                      Total: ₹{product.price * quantity}
+                    </span>
+                  </div>
+                  <div className="inline-flex items-center border-2 border-gray-200 rounded-xl bg-white shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                      disabled={quantity <= 1}
+                      className="w-10 h-10 flex items-center justify-center text-valuecart-navy hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent rounded-l-lg transition-colors text-base font-bold"
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-12 text-center text-sm font-extrabold text-valuecart-navy select-none">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity((prev) => Math.min(10, prev + 1))}
+                      className="w-10 h-10 flex items-center justify-center text-valuecart-navy hover:bg-gray-100 rounded-r-lg transition-colors text-base font-bold"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Actions */}

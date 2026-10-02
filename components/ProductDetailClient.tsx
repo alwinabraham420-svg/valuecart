@@ -38,7 +38,7 @@ export default function ProductDetailClient({
 }: ProductDetailClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addToCart, isInWishlist, toggleWishlist, addToast, openCart } = useStore();
+  const { addToCart, buyNow, isInWishlist, toggleWishlist, addToast, openCart } = useStore();
 
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -99,7 +99,6 @@ export default function ProductDetailClient({
     setIsAdding(true);
     addToCart(product, quantity);
     trackAddToCart(product, quantity);
-    addToast('Added to Cart', `${product.shortName || product.name} (Qty: ${quantity}) has been added.`, 'success');
     setTimeout(() => {
       setIsAdding(false);
     }, 300);
@@ -107,7 +106,7 @@ export default function ProductDetailClient({
 
   const handleBuyNow = () => {
     setIsBuying(true);
-    addToCart(product, quantity);
+    buyNow(product, quantity);
     trackAddToCart(product, quantity);
     router.push('/checkout');
   };
@@ -393,33 +392,34 @@ export default function ProductDetailClient({
             </div>
 
             {/* Quantity Selector */}
-            <div className="mt-6 flex items-center gap-4">
+            <div className="mt-6 flex flex-wrap items-center gap-4">
               <span className="text-xs font-bold text-valuecart-navy uppercase tracking-wider">
                 Quantity:
               </span>
-              <div className="flex items-center border border-gray-300 rounded-xl bg-white overflow-hidden shadow-2xs">
+              <div className="flex items-center border-2 border-gray-200 rounded-2xl bg-white overflow-hidden shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="px-3.5 py-2 hover:bg-gray-100 text-valuecart-navy font-bold text-base transition-colors"
+                  disabled={quantity <= 1}
+                  className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 text-valuecart-navy font-bold text-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   aria-label="Decrease quantity"
                 >
                   −
                 </button>
-                <span className="px-4 text-sm font-bold text-valuecart-navy select-none min-w-[32px] text-center">
+                <span className="w-12 text-center text-base font-black text-valuecart-navy select-none">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-                  className="px-3.5 py-2 hover:bg-gray-100 text-valuecart-navy font-bold text-base transition-colors"
+                  className="w-11 h-11 flex items-center justify-center hover:bg-gray-100 text-valuecart-navy font-bold text-lg transition-colors cursor-pointer"
                   aria-label="Increase quantity"
                 >
                   +
                 </button>
               </div>
-              <span className="text-xs text-valuecart-text-muted">
-                Subtotal: <strong className="text-valuecart-navy font-bold">₹{product.price * quantity}</strong>
+              <span className="text-xs sm:text-sm text-valuecart-text-muted">
+                Subtotal: <strong className="text-valuecart-navy font-black text-sm sm:text-base">₹{product.price * quantity}</strong>
               </span>
             </div>
 
@@ -741,9 +741,11 @@ export default function ProductDetailClient({
         style={{ paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom))' }}
       >
         <div>
-          <span className="text-[10px] text-valuecart-text-muted block leading-none">Price</span>
+          <span className="text-[10px] text-valuecart-text-muted block leading-none">
+            {quantity > 1 ? `Total (${quantity} units)` : 'Price'}
+          </span>
           <span className="text-xl font-black text-valuecart-navy leading-tight">
-            ₹{product.price}
+            ₹{product.price * quantity}
           </span>
         </div>
 

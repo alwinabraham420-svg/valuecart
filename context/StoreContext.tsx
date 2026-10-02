@@ -20,6 +20,7 @@ interface StoreContextType {
   shippingFeeConfig: number;
   setShippingFeeConfig: (fee: number) => void;
   addToCart: (product: Product, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
+  buyNow: (product: Product, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -109,6 +110,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToCart = (product: Product, quantity = 1, selectedSize?: string, selectedColor?: string) => {
+    const cleanQty = Math.max(1, Math.min(10, Math.floor(quantity)));
     // Verify product is in stock and available
     const inStock = product.isAvailable !== false && (product.stock === undefined || product.stock > 0 || product.slug === 'stainless-steel-chopping-board');
     if (!inStock) {
@@ -120,30 +122,58 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const existingIndex = prev.findIndex((item) => item.product.id === product.id);
       if (existingIndex > -1) {
         const updated = [...prev];
-        updated[existingIndex].quantity = Math.min(10, updated[existingIndex].quantity + quantity);
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: Math.min(10, updated[existingIndex].quantity + cleanQty),
+          selectedSize: selectedSize || updated[existingIndex].selectedSize,
+          selectedColor: selectedColor || updated[existingIndex].selectedColor,
+        };
         return updated;
       }
-      return [...prev, { product, quantity, selectedSize, selectedColor }];
+      return [...prev, { product, quantity: cleanQty, selectedSize, selectedColor }];
     });
-    addToast('Added to Cart', `${product.shortName || product.name} (Qty: ${quantity}) added to cart.`);
+    addToast('Added to Cart', `${product.shortName || product.name} (Qty: ${cleanQty}) added to cart.`);
+  };
+
+  const buyNow = (product: Product, quantity = 1, selectedSize?: string, selectedColor?: string) => {
+    const cleanQty = Math.max(1, Math.min(10, Math.floor(quantity)));
+    const inStock = product.isAvailable !== false && (product.stock === undefined || product.stock > 0 || product.slug === 'stainless-steel-chopping-board');
+    if (!inStock) {
+      addToast('Product Unavailable', 'This product is currently out of stock.', 'warning');
+      return;
+    }
+
+    setCart((prev) => {
+      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
+      if (existingIndex > -1) {
+        const updated = [...prev];
+        // Set exact quantity requested for Buy Now, never accumulate
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: cleanQty,
+          selectedSize: selectedSize || updated[existingIndex].selectedSize,
+          selectedColor: selectedColor || updated[existingIndex].selectedColor,
+        };
+        return updated;
+      }
+      return [...prev, { product, quantity: cleanQty, selectedSize, selectedColor }];
+    });
   };
 
   const removeFromCart = (productId: string) => {
     const item = cart.find((i) => i.product.id === productId);
     setCart((prev) => prev.filter((i) => i.product.id !== productId));
     if (item) {
-      addToast('Removed', `${item.product.name} was removed from your cart.`, 'info');
+      addToast('Removed', `${item.product.shortName || item.product.name} removed from your cart.`, 'info');
     }
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
+    // Minimum quantity is 1. Never allow 0 or negative through minus button!
+    const cleanQty = Math.max(1, Math.min(10, Math.floor(quantity)));
     setCart((prev) =>
       prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
+        item.product.id === productId ? { ...item, quantity: cleanQty } : item
       )
     );
   };
@@ -189,6 +219,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         shippingFeeConfig,
         setShippingFeeConfig,
         addToCart,
+        buyNow,
         removeFromCart,
         updateQuantity,
         clearCart,

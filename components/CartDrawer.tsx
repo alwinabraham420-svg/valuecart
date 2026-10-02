@@ -167,19 +167,20 @@ export default function CartDrawer() {
                       <div className="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shadow-2xs">
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          className="p-1 hover:bg-gray-100 text-gray-600 transition-colors"
+                          onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed text-valuecart-navy transition-colors font-bold"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="px-2.5 text-xs font-semibold text-valuecart-navy min-w-[24px] text-center">
+                        <span className="w-7 sm:w-8 text-center text-xs font-bold text-valuecart-navy select-none">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          className="p-1 hover:bg-gray-100 text-gray-600 transition-colors"
+                          onClick={() => updateQuantity(item.product.id, Math.min(10, item.quantity + 1))}
+                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-gray-100 text-valuecart-navy transition-colors font-bold"
                           aria-label="Increase quantity"
                         >
                           <Plus className="w-3.5 h-3.5" />

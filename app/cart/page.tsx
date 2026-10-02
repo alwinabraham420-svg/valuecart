@@ -95,96 +95,118 @@ export default function CartPage() {
 
           {/* Cart Table / Items */}
           <div className="bg-white rounded-3xl border border-valuecart-border/80 shadow-soft divide-y divide-gray-100 overflow-hidden">
-            {cart.map((item) => (
-              <div
-                key={item.product.id}
-                className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0">
-                    <Image
-                      src={item.product.image}
-                      alt={item.product.name}
-                      fill
-                      sizes="96px"
-                      className="object-cover"
-                    />
-                  </div>
+            {cart.map((item) => {
+              const lineTotal = item.product.price * item.quantity;
+              const lineSavings = (item.product.originalPrice - item.product.price) * item.quantity;
 
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-valuecart-green uppercase tracking-wider">
-                      {item.product.category}
-                    </span>
-                    <Link
-                      href={`/product/${item.product.slug}`}
-                      className="text-sm sm:text-base font-bold text-valuecart-navy hover:text-valuecart-green block transition-colors line-clamp-1"
-                    >
-                      {item.product.name}
-                    </Link>
-                    {item.selectedSize && (
-                      <span className="text-xs text-valuecart-text-muted block">
-                        Size: <strong className="text-valuecart-navy">{item.selectedSize}</strong>
+              return (
+                <div
+                  key={item.product.id}
+                  className="p-4 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6"
+                >
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0">
+                      <Image
+                        src={item.product.image}
+                        alt={item.product.name}
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                      />
+                    </div>
+
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[11px] font-bold text-valuecart-green uppercase tracking-wider">
+                        {item.product.category}
                       </span>
-                    )}
-                    <div className="flex items-baseline gap-2 pt-1">
-                      <span className="text-base font-extrabold text-valuecart-navy">
-                        ₹{item.product.price}
-                      </span>
-                      {item.product.originalPrice > item.product.price && (
-                        <span className="text-xs text-gray-400 line-through">
-                          ₹{item.product.originalPrice}
+                      <Link
+                        href={`/product/${item.product.slug}`}
+                        className="text-sm sm:text-base font-bold text-valuecart-navy hover:text-valuecart-green block transition-colors truncate"
+                      >
+                        {item.product.name}
+                      </Link>
+                      {item.selectedSize && (
+                        <span className="text-xs text-valuecart-text-muted block">
+                          Size: <strong className="text-valuecart-navy">{item.selectedSize}</strong>
                         </span>
                       )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quantity Controls & Total & Remove */}
-                <div className="flex items-center justify-between w-full sm:w-auto gap-6 sm:self-center">
-                  <div className="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden shadow-2xs">
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      className="p-2 hover:bg-gray-100 text-valuecart-navy transition-colors"
-                      aria-label="Decrease"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="px-3.5 text-xs font-bold text-valuecart-navy min-w-[32px] text-center">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      className="p-2 hover:bg-gray-100 text-valuecart-navy transition-colors"
-                      aria-label="Increase"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="text-right min-w-[70px]">
-                    <div className="text-base font-bold text-valuecart-navy">
-                      ₹{item.product.price * item.quantity}
-                    </div>
-                    {item.product.originalPrice > item.product.price && (
-                      <div className="text-[11px] text-emerald-600 font-semibold">
-                        Save ₹{(item.product.originalPrice - item.product.price) * item.quantity}
+                      <div className="flex items-baseline gap-2 pt-0.5">
+                        <span className="text-sm sm:text-base font-bold text-valuecart-navy">
+                          ₹{item.product.price}
+                        </span>
+                        <span className="text-xs text-valuecart-text-muted">each</span>
+                        {item.product.originalPrice > item.product.price && (
+                          <span className="text-xs text-gray-400 line-through">
+                            ₹{item.product.originalPrice}
+                          </span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => removeFromCart(item.product.id)}
-                    className="p-2 text-gray-400 hover:text-rose-500 rounded-lg transition-colors"
-                    aria-label="Remove item"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {/* Quantity Controls, Line Total & Remove */}
+                  <div className="flex items-center justify-between w-full md:w-auto gap-4 sm:gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100">
+                    {/* Quantity Selector [-] QTY [+] */}
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="text-[10px] uppercase font-bold text-valuecart-text-muted tracking-wider hidden sm:block">
+                        Quantity
+                      </span>
+                      <div className="inline-flex items-center border-2 border-gray-200 rounded-xl bg-white shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
+                          className="w-10 h-10 flex items-center justify-center text-valuecart-navy hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed rounded-l-lg transition-colors font-bold text-base"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="w-11 text-center text-sm sm:text-base font-extrabold text-valuecart-navy select-none">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product.id, Math.min(10, item.quantity + 1))}
+                          className="w-10 h-10 flex items-center justify-center text-valuecart-navy hover:bg-gray-100 rounded-r-lg transition-colors font-bold text-base"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Line Total */}
+                    <div className="text-right min-w-[90px] sm:min-w-[110px]">
+                      <span className="text-[10px] uppercase font-bold text-valuecart-text-muted tracking-wider block">
+                        Total
+                      </span>
+                      <div className="text-base sm:text-lg font-black text-valuecart-navy">
+                        ₹{lineTotal}
+                      </div>
+                      <div className="text-[10px] text-valuecart-text-muted">
+                        ₹{item.product.price} × {item.quantity}
+                      </div>
+                      {lineSavings > 0 && (
+                        <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">
+                          Save ₹{lineSavings}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Remove Button */}
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.product.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200/80 shrink-0"
+                      aria-label={`Remove ${item.product.name} from cart`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Remove</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="flex justify-between items-center pt-2">
