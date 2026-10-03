@@ -49,6 +49,33 @@ export async function generateMetadata({
     };
   }
 
+  if (product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser') {
+    return {
+      title: '2 in 1 Oil Sprayer Glass Bottle & Dispenser | ValueCart',
+      description:
+        'Shop the 2 in 1 Oil Sprayer Glass Bottle & Dispenser at ₹349. Fine mist spray and smooth pouring with a durable glass bottle, leak-proof seal and comfortable handle.',
+      alternates: {
+        canonical: `${siteUrl}/product/${product.slug}`,
+      },
+      openGraph: {
+        title: '2 in 1 Oil Sprayer Glass Bottle & Dispenser | ValueCart',
+        description:
+          'Shop the 2 in 1 Oil Sprayer Glass Bottle & Dispenser at ₹349. Fine mist spray and smooth pouring with a durable glass bottle, leak-proof seal and comfortable handle.',
+        type: 'website',
+        locale: 'en_IN',
+        url: `${siteUrl}/product/${product.slug}`,
+        images: [
+          {
+            url: product.image,
+            width: 1024,
+            height: 1024,
+            alt: product.name,
+          },
+        ],
+      },
+    };
+  }
+
   return {
     title: `${product.name} | ValueCart`,
     description: product.description,
@@ -109,7 +136,10 @@ export default async function ProductDetailPage({
       url: `${siteUrl}/product/${product.slug}`,
       priceCurrency: 'INR',
       price: product.price,
-      availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      availability:
+        product.stock > 0 && product.isAvailable !== false
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',
     },
   };

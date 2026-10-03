@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { PRODUCTS } from '@/data/products';
+import { getProductRuntimeOverride } from '@/lib/runtimeProductStore';
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,13 +66,26 @@ export async function POST(req: NextRequest) {
       let supplierCost = 0;
       let dbProductId = item.productId;
 
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.productId || '');
+      const slugToLookup = item.productSlug || item.slug || '';
+
       if (supabase) {
         try {
-          const { data: dbProduct } = await supabase
+          let query = supabase
             .from('products')
-            .select('id, name, slug, selling_price, primary_image, is_active, stock_quantity')
-            .or(`id.eq.${item.productId},slug.eq.${item.productSlug}`)
-            .maybeSingle();
+            .select('id, name, slug, selling_price, primary_image, is_active, stock_quantity');
+
+          if (isUuid && slugToLookup) {
+            query = query.or(`id.eq.${item.productId},slug.eq.${slugToLookup}`);
+          } else if (isUuid) {
+            query = query.eq('id', item.productId);
+          } else if (slugToLookup) {
+            query = query.eq('slug', slugToLookup);
+          } else {
+            query = query.eq('slug', 'stainless-steel-chopping-board');
+          }
+
+          const { data: dbProduct } = await query.maybeSingle();
 
           if (dbProduct) {
             if (!dbProduct.is_active || (dbProduct.stock_quantity !== null && dbProduct.stock_quantity <= 0)) {
@@ -95,7 +109,11 @@ export async function POST(req: NextRequest) {
       if (officialPrice === 0) {
         const staticProd = PRODUCTS.find((p) => p.id === item.productId || p.slug === item.productSlug);
         if (staticProd) {
-          if (!staticProd.isAvailable || staticProd.stock <= 0) {
+          const override = getProductRuntimeOverride(staticProd.id) || getProductRuntimeOverride(staticProd.slug);
+          const effectiveIsAvailable = override?.isAvailable !== undefined ? override.isAvailable : staticProd.isAvailable;
+          const effectiveStock = override?.stock !== undefined ? override.stock : staticProd.stock;
+
+          if (!effectiveIsAvailable || effectiveStock <= 0) {
             return NextResponse.json(
               { error: `Sorry, product "${staticProd.name}" is currently out of stock.` },
               { status: 400 }

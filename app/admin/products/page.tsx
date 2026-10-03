@@ -256,7 +256,7 @@ export default function AdminProductsPage() {
                             target="_blank"
                             className="font-bold text-valuecart-navy hover:text-valuecart-green hover:underline line-clamp-1 text-sm block"
                           >
-                            {prod.name}
+                            {prod.shortName || prod.name}
                           </Link>
                           {ec?.supplierName && (
                             <span className="text-[11px] text-valuecart-text-muted truncate block">

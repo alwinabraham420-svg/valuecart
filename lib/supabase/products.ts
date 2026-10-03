@@ -19,7 +19,14 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     if (!error && data) {
       const specs = (data.specs as Record<string, unknown>) || {};
       const categoryData = Array.isArray(data.categories) ? data.categories[0] : data.categories;
-      const stockQty = typeof data.stock_quantity === 'number' ? data.stock_quantity : (data.slug === 'stainless-steel-chopping-board' ? 120 : 0);
+      const stockQty =
+        typeof data.stock_quantity === 'number'
+          ? data.stock_quantity
+          : data.slug === 'stainless-steel-chopping-board'
+          ? 120
+          : data.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser'
+          ? 100
+          : 0;
       const isAvail = Boolean(data.is_active !== false && stockQty > 0);
 
       return {
@@ -32,7 +39,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         price: Number(data.selling_price),
         originalPrice: Number(data.original_price),
         discount: Number(data.discount_percentage) || 0,
-        rating: Number(data.rating) || 4.8,
+        rating: Number(data.rating) || 0,
         reviewCount: data.review_count || 0,
         image: data.primary_image,
         images: Array.isArray(data.images) ? data.images : [data.primary_image],
@@ -74,10 +81,18 @@ export async function getAllProducts(): Promise<Product[]> {
       .order('created_at', { ascending: false });
 
     if (!error && data && data.length > 0) {
-      return data.map((item) => {
+      const dbSlugs = new Set(data.map((d: any) => d.slug));
+      const dbProducts = data.map((item) => {
         const specs = (item.specs as Record<string, unknown>) || {};
         const categoryData = Array.isArray(item.categories) ? item.categories[0] : item.categories;
-        const stockQty = typeof item.stock_quantity === 'number' ? item.stock_quantity : (item.slug === 'stainless-steel-chopping-board' ? 120 : 0);
+        const stockQty =
+          typeof item.stock_quantity === 'number'
+            ? item.stock_quantity
+            : item.slug === 'stainless-steel-chopping-board'
+            ? 120
+            : item.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser'
+            ? 100
+            : 0;
         const isAvail = Boolean(item.is_active !== false && stockQty > 0);
 
         return {
@@ -90,7 +105,7 @@ export async function getAllProducts(): Promise<Product[]> {
           price: Number(item.selling_price),
           originalPrice: Number(item.original_price),
           discount: Number(item.discount_percentage) || 0,
-          rating: Number(item.rating) || 4.8,
+          rating: Number(item.rating) || 0,
           reviewCount: item.review_count || 0,
           image: item.primary_image,
           images: Array.isArray(item.images) ? item.images : [item.primary_image],
@@ -108,6 +123,9 @@ export async function getAllProducts(): Promise<Product[]> {
           useCases: (specs.useCases as { title: string; subtitle: string; image: string }[]) || undefined,
         };
       });
+
+      const remainingStatic = PRODUCTS.filter((p) => !dbSlugs.has(p.slug));
+      return [...dbProducts, ...remainingStatic];
     }
   } catch (err) {
     if (process.env.NODE_ENV !== 'production') {

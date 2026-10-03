@@ -1,12 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { PRODUCTS } from '@/data/products';
+import { getProductRuntimeOverride, setProductRuntimeOverride } from '@/lib/runtimeProductStore';
 
 export async function GET() {
   try {
     const supabase = createAdminClient();
+    const applyOverrides = (prods: typeof PRODUCTS) => {
+      return prods.map((p) => {
+        const override = getProductRuntimeOverride(p.id) || getProductRuntimeOverride(p.slug);
+        if (override) {
+          return {
+            ...p,
+            ...override,
+            stock: typeof override.stock === 'number' ? override.stock : p.stock,
+            isAvailable: override.isAvailable !== undefined ? override.isAvailable : p.isAvailable,
+          };
+        }
+        return p;
+      });
+    };
+
     if (!supabase) {
-      return NextResponse.json({ products: PRODUCTS });
+      return NextResponse.json({ products: applyOverrides(PRODUCTS) });
     }
 
     const { data, error } = await supabase
@@ -15,7 +31,7 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {
-      return NextResponse.json({ products: PRODUCTS });
+      return NextResponse.json({ products: applyOverrides(PRODUCTS) });
     }
 
     // Merge DB records with static catalog
@@ -36,7 +52,7 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ products: merged });
+    return NextResponse.json({ products: applyOverrides(merged) });
   } catch (err: any) {
     return NextResponse.json({ products: PRODUCTS, error: err.message }, { status: 500 });
   }
@@ -50,6 +66,9 @@ export async function PATCH(req: NextRequest) {
     if (!productId && !slug) {
       return NextResponse.json({ error: 'productId or slug is required.' }, { status: 400 });
     }
+
+    if (productId) setProductRuntimeOverride(productId, updates);
+    if (slug) setProductRuntimeOverride(slug, updates);
 
     const supabase = createAdminClient();
     if (!supabase) {

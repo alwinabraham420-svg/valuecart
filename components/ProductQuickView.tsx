@@ -123,10 +123,16 @@ export default function ProductQuickView() {
 
                 {/* Rating & Stock */}
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md text-xs font-bold">
-                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                    <span>{product.rating}</span>
-                  </div>
+                  {product.reviewCount > 0 && product.rating > 0 ? (
+                    <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md text-xs font-bold">
+                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                      <span>{product.rating}</span>
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-valuecart-green font-medium">
+                      ✓ Verified Quality
+                    </div>
+                  )}
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                     !isOutOfStock ? 'text-valuecart-green bg-valuecart-green-tint' : 'text-rose-700 bg-rose-50'
                   }`}>

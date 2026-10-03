@@ -235,7 +235,9 @@ export default function ProductDetailClient({
                 </span>
               )}
               <span className="bg-valuecart-green text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm">
-                304 Food Grade
+                {product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser'
+                  ? 'Food Grade Material'
+                  : '304 Food Grade'}
               </span>
             </div>
 
@@ -328,7 +330,9 @@ export default function ProductDetailClient({
               <span className="text-xs font-bold text-valuecart-green uppercase tracking-wider bg-valuecart-green-tint px-3 py-1 rounded-md">
                 Kitchen Essentials
               </span>
-              <span className="text-xs text-valuecart-text-muted">• Cutting Boards</span>
+              <span className="text-xs text-valuecart-text-muted">
+                • {product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? 'Oil Sprayer / Dispenser' : 'Cutting Boards'}
+              </span>
             </div>
 
             {/* Title */}
@@ -359,7 +363,7 @@ export default function ProductDetailClient({
               </span>
             </div>
 
-            {/* Price Area: ₹299 ONLY (No fake MRP / discount) */}
+            {/* Price Area: ₹349 ONLY */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl sm:text-4xl font-black text-valuecart-navy tracking-tight">
@@ -382,10 +386,10 @@ export default function ProductDetailClient({
                 </div>
                 <div>
                   <span className="text-xs font-bold text-valuecart-navy block">
-                    Medium Size
+                    {product.sizeLabel || (product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? '18.5 cm Tall × 10.5 cm Wide' : 'Medium Size')}
                   </span>
                   <span className="text-[11px] text-valuecart-text-muted">
-                    Dimensions: 31.7 CM × 20.8 CM
+                    Dimensions: {product.dimensions || (product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? '18.5 cm × 10.5 cm' : '31.7 CM × 20.8 CM')}
                   </span>
                 </div>
               </div>
@@ -394,19 +398,52 @@ export default function ProductDetailClient({
               </span>
             </div>
 
-            {/* Key Features / Highlights Checklist (ONLY from creative) */}
+            {/* Key Features / Highlights Feature Cards */}
             <div className="mt-5">
               <span className="text-xs font-bold text-valuecart-navy uppercase tracking-wider block mb-2.5">
                 Product Highlights
               </span>
-              <div className="grid grid-cols-2 gap-2 text-xs text-valuecart-text-main">
-                {featuresList.map((feat) => (
-                  <div key={feat} className="flex items-center gap-2 p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 text-valuecart-green shrink-0" />
-                    <span className="font-semibold">{feat}</span>
-                  </div>
-                ))}
-              </div>
+              {product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? (
+                <div className="grid grid-cols-2 gap-2 text-xs text-valuecart-text-main">
+                  {[
+                    { title: '2-IN-1', sub: 'Pour & Spray' },
+                    { title: 'FINE MIST SPRAY', sub: 'Even Coverage' },
+                    { title: 'SMOOTH POURING', sub: 'No Spilling' },
+                    { title: 'FOOD GRADE MATERIAL', sub: 'Borosilicate Glass' },
+                    { title: 'LEAK PROOF DESIGN', sub: 'Tight Silicone Seal' },
+                    { title: 'EASY TO CLEAN', sub: 'Quick Maintenance' },
+                    { title: 'DURABLE & LONG LASTING', sub: 'Built for Daily Use' },
+                  ].map((card, i) => (
+                    <div
+                      key={i}
+                      className={`p-2.5 rounded-xl border flex flex-col justify-center transition-all ${
+                        card.title === '2-IN-1'
+                          ? 'bg-valuecart-green-tint/70 border-valuecart-green/40 col-span-2 sm:col-span-1 shadow-2xs'
+                          : 'bg-white border-gray-100 shadow-2xs'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-valuecart-green shrink-0" />
+                        <span className="font-extrabold text-valuecart-navy text-xs tracking-tight">
+                          {card.title}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-valuecart-text-muted font-medium ml-5">
+                        {card.sub}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 text-xs text-valuecart-text-main">
+                  {featuresList.map((feat) => (
+                    <div key={feat} className="flex items-center gap-2 p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
+                      <CheckCircle2 className="w-4 h-4 text-valuecart-green shrink-0" />
+                      <span className="font-semibold">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Quantity Selector */}
@@ -581,21 +618,23 @@ export default function ProductDetailClient({
 
       </div>
 
-      {/* 3. Product Use Cases Section (4 Visual Cards from Creative) */}
+      {/* 3. Product Use Cases Section */}
       <div className="mt-14">
         <div className="text-center max-w-xl mx-auto mb-8">
           <span className="text-xs font-bold uppercase tracking-wider text-valuecart-green bg-valuecart-green-tint px-3 py-1 rounded-full">
-            Versatile Kitchen Prep
+            {product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? 'Versatile Kitchen Usage' : 'Versatile Kitchen Prep'}
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-valuecart-navy mt-2">
-            Multi-Purpose Cutting &amp; Prep
+            {product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? 'Everyday Use Cases' : 'Multi-Purpose Cutting & Prep'}
           </h2>
           <p className="text-xs sm:text-sm text-valuecart-text-muted mt-1.5">
-            Designed to replace toxic plastic boards with food-safe 304 stainless steel.
+            {product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser'
+              ? 'Suitable for controlled oil usage while cooking, baking, preparing salads, air fryer and barbecue.'
+              : 'Designed to replace toxic plastic boards with food-safe 304 stainless steel.'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${useCasesList.length >= 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4 sm:gap-5`}>
           {useCasesList.map((item, idx) => (
             <div
               key={idx}
@@ -617,13 +656,15 @@ export default function ProductDetailClient({
                 <h3 className="font-extrabold text-sm text-valuecart-navy leading-snug">
                   {item.title}
                 </h3>
-                <p className="text-xs text-valuecart-text-muted mt-1 leading-relaxed">
-                  {item.subtitle}
-                </p>
+                {item.subtitle && (
+                  <p className="text-xs text-valuecart-text-muted mt-1 leading-relaxed">
+                    {item.subtitle}
+                  </p>
+                )}
               </div>
               <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-[11px] font-bold text-valuecart-green">
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Food Grade Surface</span>
+                <span>{product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? 'Controlled Dispensing' : 'Food Grade Surface'}</span>
               </div>
             </div>
           ))}
@@ -671,36 +712,99 @@ export default function ProductDetailClient({
         {/* Tab 1: Description */}
         {activeTab === 'desc' && (
           <div className="py-6 text-sm text-valuecart-text-main leading-relaxed space-y-4">
-            <h3 className="text-base font-bold text-valuecart-navy">
-              Everyday Healthier Kitchen Essentials
-            </h3>
-            <p>
-              A medium-size stainless steel chopping board designed for everyday kitchen use.
-              Unlike traditional plastic cutting boards that harbor bacteria, absorb deep stains,
-              and release microplastics into prepared meals, this cutting board is built with food-grade
-              <strong> 304 stainless steel</strong> to ensure maximum hygiene.
-            </p>
-            <p>
-              Its non-porous surface delivers seamless easy cleaning—just rinse under running water and it is good as new.
-              Engineered with smooth rounded edges for safe and comfortable handling, along with a convenient handle cut-out
-              for easy holding and hanging storage.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-              <div className="p-3.5 rounded-2xl bg-valuecart-warm-white border border-gray-100 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-valuecart-green shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-valuecart-navy">Hygienic &amp; Microplastic Free</h4>
-                  <p className="text-xs text-valuecart-text-muted mt-0.5">Non-porous surface that prevents bacteria build-up and food absorption.</p>
+            {product.slug === '2-in-1-oil-sprayer-glass-bottle-dispenser' ? (
+              <>
+                <h3 className="text-base font-bold text-valuecart-navy">
+                  2-in-1 Oil Sprayer &amp; Dispenser Bottle for Kitchen
+                </h3>
+                <p>
+                  Upgrade your everyday cooking with this 2-in-1 Oil Sprayer and Dispenser Bottle. Designed for both fine mist spraying and smooth pouring, it is suitable for controlled oil usage while cooking, baking, preparing salads, using an air fryer and barbecue.
+                </p>
+                <p>
+                  The bottle features a glass container with a green dispenser top and comfortable handle design.
+                </p>
+
+                <div className="pt-2">
+                  <h4 className="text-xs font-bold text-valuecart-navy uppercase tracking-wider mb-2.5">
+                    Key Features
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {[
+                      '2-in-1 oil sprayer and dispenser',
+                      'Fine mist spray',
+                      'Smooth pouring',
+                      'No-spillage design',
+                      'Leak-proof seal',
+                      'Food-grade material',
+                      'Premium glass bottle',
+                      'Durable and long-lasting',
+                      'Comfortable PP handle',
+                      'Gravity sensor lid',
+                      'Anti-clogging filter',
+                      'Easy to clean',
+                      'Suitable for cooking, salads, air fryer, barbecue and baking',
+                      'Green color',
+                      'Pack of 1',
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 border border-gray-100">
+                        <CheckCircle2 className="w-4 h-4 text-valuecart-green shrink-0" />
+                        <span className="font-semibold">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="p-3.5 rounded-2xl bg-valuecart-warm-white border border-gray-100 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-valuecart-green shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-valuecart-navy">Easy to Clean &amp; Odor Resistant</h4>
-                  <p className="text-xs text-valuecart-text-muted mt-0.5">Quick water rinse cleans off grease and raw meat residues completely.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3">
+                  <div className="p-3.5 rounded-2xl bg-valuecart-warm-white border border-gray-100 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-valuecart-green shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-valuecart-navy">Dual Spray &amp; Pour Action</h4>
+                      <p className="text-xs text-valuecart-text-muted mt-0.5">Press to spray fine mist or tilt for smooth pouring without dripping.</p>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-valuecart-warm-white border border-gray-100 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-valuecart-green shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-valuecart-navy">Premium Borosilicate Glass</h4>
+                      <p className="text-xs text-valuecart-text-muted mt-0.5">Clear glass body with durable PP handle, gravity sensor lid, and leak-proof seal.</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-base font-bold text-valuecart-navy">
+                  Everyday Healthier Kitchen Essentials
+                </h3>
+                <p>
+                  A medium-size stainless steel chopping board designed for everyday kitchen use.
+                  Unlike traditional plastic cutting boards that harbor bacteria, absorb deep stains,
+                  and release microplastics into prepared meals, this cutting board is built with food-grade
+                  <strong> 304 stainless steel</strong> to ensure maximum hygiene.
+                </p>
+                <p>
+                  Its non-porous surface delivers seamless easy cleaning—just rinse under running water and it is good as new.
+                  Engineered with smooth rounded edges for safe and comfortable handling, along with a convenient handle cut-out
+                  for easy holding and hanging storage.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                  <div className="p-3.5 rounded-2xl bg-valuecart-warm-white border border-gray-100 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-valuecart-green shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-valuecart-navy">Hygienic &amp; Microplastic Free</h4>
+                      <p className="text-xs text-valuecart-text-muted mt-0.5">Non-porous surface that prevents bacteria build-up and food absorption.</p>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-valuecart-warm-white border border-gray-100 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-valuecart-green shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-valuecart-navy">Easy to Clean &amp; Odor Resistant</h4>
+                      <p className="text-xs text-valuecart-text-muted mt-0.5">Quick water rinse cleans off grease and raw meat residues completely.</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -708,28 +812,38 @@ export default function ProductDetailClient({
         {activeTab === 'specs' && (
           <div className="py-6">
             <div className="border border-gray-200 rounded-2xl overflow-hidden divide-y divide-gray-100 max-w-2xl bg-white shadow-2xs">
-              <div className="flex px-4 py-3 text-xs sm:text-sm">
-                <span className="w-1/3 font-semibold text-valuecart-navy">Product</span>
-                <span className="w-2/3 text-valuecart-text-muted">Stainless Steel Chopping Board</span>
-              </div>
-              <div className="flex px-4 py-3 text-xs sm:text-sm bg-gray-50/50">
-                <span className="w-1/3 font-semibold text-valuecart-navy">Material</span>
-                <span className="w-2/3 text-valuecart-text-muted">304 Stainless Steel</span>
-              </div>
-              <div className="flex px-4 py-3 text-xs sm:text-sm">
-                <span className="w-1/3 font-semibold text-valuecart-navy">Size</span>
-                <span className="w-2/3 text-valuecart-text-muted">Medium</span>
-              </div>
-              <div className="flex px-4 py-3 text-xs sm:text-sm bg-gray-50/50">
-                <span className="w-1/3 font-semibold text-valuecart-navy">Dimensions</span>
-                <span className="w-2/3 text-valuecart-text-muted">31.7 cm × 20.8 cm</span>
-              </div>
-              <div className="flex px-4 py-3 text-xs sm:text-sm">
-                <span className="w-1/3 font-semibold text-valuecart-navy">Features</span>
-                <span className="w-2/3 text-valuecart-text-muted">
-                  Rust Resistant, Hygienic Surface, Easy to Clean, Odour &amp; Stain Resistant, Multi-Purpose, Convenient Handle, Smooth Rounded Edges
-                </span>
-              </div>
+              {product.specs && Object.keys(product.specs).length > 0 ? (
+                Object.entries(product.specs).map(([key, val], idx) => (
+                  <div
+                    key={key}
+                    className={`flex px-4 py-3 text-xs sm:text-sm ${
+                      idx % 2 === 1 ? 'bg-gray-50/50' : ''
+                    }`}
+                  >
+                    <span className="w-1/3 font-semibold text-valuecart-navy">{key}</span>
+                    <span className="w-2/3 text-valuecart-text-muted">{val}</span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex px-4 py-3 text-xs sm:text-sm">
+                    <span className="w-1/3 font-semibold text-valuecart-navy">Product</span>
+                    <span className="w-2/3 text-valuecart-text-muted">{product.name}</span>
+                  </div>
+                  {product.material && (
+                    <div className="flex px-4 py-3 text-xs sm:text-sm bg-gray-50/50">
+                      <span className="w-1/3 font-semibold text-valuecart-navy">Material</span>
+                      <span className="w-2/3 text-valuecart-text-muted">{product.material}</span>
+                    </div>
+                  )}
+                  {product.dimensions && (
+                    <div className="flex px-4 py-3 text-xs sm:text-sm">
+                      <span className="w-1/3 font-semibold text-valuecart-navy">Dimensions</span>
+                      <span className="w-2/3 text-valuecart-text-muted">{product.dimensions}</span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}

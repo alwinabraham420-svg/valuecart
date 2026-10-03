@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { PRODUCTS } from '@/data/products';
 import { Order, OrderItem } from '@/types';
+import { getProductRuntimeOverride } from '@/lib/runtimeProductStore';
 
 export async function POST(req: NextRequest) {
   try {
@@ -118,7 +119,11 @@ export async function POST(req: NextRequest) {
           (p) => p.id === item.productId || p.slug === slugToLookup
         );
         if (staticProd) {
-          if (!staticProd.isAvailable || staticProd.stock <= 0) {
+          const override = getProductRuntimeOverride(staticProd.id) || getProductRuntimeOverride(staticProd.slug);
+          const effectiveIsAvailable = override?.isAvailable !== undefined ? override.isAvailable : staticProd.isAvailable;
+          const effectiveStock = override?.stock !== undefined ? override.stock : staticProd.stock;
+
+          if (!effectiveIsAvailable || effectiveStock <= 0) {
             return NextResponse.json(
               { error: `Sorry, product "${staticProd.name}" is currently out of stock.` },
               { status: 400 }
