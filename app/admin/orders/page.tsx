@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Search,
@@ -16,16 +16,91 @@ import {
   AlertCircle,
   Copy,
   Clock,
+  Trash2,
+  Loader2,
+  X,
 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
-import { OrderStatus } from '@/types';
+import { Order, OrderStatus } from '@/types';
 
 export default function AdminOrdersPage() {
-  const { orders, updateOrderStatus } = useAdmin();
+  const { orders, updateOrderStatus, deleteOrder } = useAdmin();
 
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'profit-high' | 'price-high'>('date-desc');
+
+  // Deletion modal & state
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const cancelBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-focus Cancel button when confirmation modal opens to prevent accidental deletion
+  useEffect(() => {
+    if (orderToDelete) {
+      const timer = setTimeout(() => {
+        cancelBtnRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [orderToDelete]);
+
+  // Handle ESC key to dismiss modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && orderToDelete && !isDeleting) {
+        setOrderToDelete(null);
+        setDeleteError(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [orderToDelete, isDeleting]);
+
+  const openDeleteModal = (ord: Order) => {
+    setOrderToDelete(ord);
+    setDeleteError(null);
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeleting) return;
+    setOrderToDelete(null);
+    setDeleteError(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!orderToDelete || isDeleting) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    const targetOrderId = orderToDelete.id;
+    const res = await deleteOrder(targetOrderId);
+
+    setIsDeleting(false);
+
+    if (res.success) {
+      setOrderToDelete(null);
+      setFeedback({
+        type: 'success',
+        message: 'Order deleted successfully.',
+      });
+
+      const timer = setTimeout(() => {
+        setFeedback((prev) => (prev?.message === 'Order deleted successfully.' ? null : prev));
+      }, 5000);
+      return () => clearTimeout(timer);
+    } else {
+      const errorMsg = 'Unable to delete this order. Please try again.';
+      setDeleteError(errorMsg);
+      setFeedback({
+        type: 'error',
+        message: errorMsg,
+      });
+    }
+  };
 
   const filterTabs = [
     { id: 'all', label: 'All Orders' },
@@ -125,6 +200,35 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       </div>
+
+      {/* Action Feedback Banner (Order deleted successfully / error) */}
+      {feedback && (
+        <div
+          role="status"
+          className={`p-4 rounded-2xl flex items-center justify-between text-xs font-bold shadow-xs transition-all ${
+            feedback.type === 'success'
+              ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
+              : 'bg-rose-50 text-rose-900 border border-rose-200'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            {feedback.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            )}
+            <span>{feedback.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="p-1 hover:bg-black/5 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+            aria-label="Dismiss message"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Filter Tabs Bar (Horizontally scrollable) */}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
@@ -308,13 +412,24 @@ export default function AdminOrdersPage() {
 
                       {/* Actions */}
                       <td className="p-4 text-right whitespace-nowrap">
-                        <Link
-                          href={`/admin/orders/${ord.id}`}
-                          className="inline-flex items-center gap-1.5 bg-valuecart-navy hover:bg-valuecart-navy-light text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Details</span>
-                        </Link>
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/admin/orders/${ord.id}`}
+                            className="inline-flex items-center gap-1.5 bg-valuecart-navy hover:bg-valuecart-navy-light text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Details</span>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => openDeleteModal(ord)}
+                            className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
+                            title={`Delete order ${ord.orderNumber}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -324,6 +439,78 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {orderToDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-order-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) {
+              closeDeleteModal();
+            }
+          }}
+        >
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 space-y-5 animate-in zoom-in-95 duration-150">
+            {/* Header with Danger Trash Icon */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 id="delete-order-dialog-title" className="text-lg font-black text-valuecart-navy">
+                  Delete this order?
+                </h3>
+                <p className="text-xs text-valuecart-text-muted leading-relaxed">
+                  Are you sure you want to permanently delete order{' '}
+                  <strong className="text-valuecart-navy font-black">{orderToDelete.orderNumber}</strong>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {/* Error inside modal if attempt failed */}
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-2 text-rose-800 text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            {/* Buttons: Cancel is default/focused */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                ref={cancelBtnRef}
+                type="button"
+                disabled={isDeleting}
+                onClick={closeDeleteModal}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-valuecart-navy hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors inline-flex items-center gap-2 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Order</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

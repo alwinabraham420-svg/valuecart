@@ -502,3 +502,164 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    let orderId: string | null = null;
+    try {
+      const body = await req.json();
+      orderId = body?.orderId || null;
+    } catch {
+      // Non-JSON body fallback to searchParams
+    }
+
+    if (!orderId) {
+      const { searchParams } = new URL(req.url);
+      orderId = searchParams.get('orderId') || searchParams.get('id');
+    }
+
+    if (!orderId) {
+      return NextResponse.json({ error: 'orderId is required' }, { status: 400 });
+    }
+
+    // 1. Server-side Authentication & Admin Role Enforcement
+    const supabaseServer = await createClient();
+    let authUser = null;
+
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+    if (bearerToken && supabaseServer) {
+      try {
+        const { data } = await supabaseServer.auth.getUser(bearerToken);
+        authUser = data?.user || null;
+      } catch {
+        // Continue to fallback checks
+      }
+    }
+
+    if (!authUser && supabaseServer) {
+      try {
+        const { data } = await supabaseServer.auth.getUser();
+        authUser = data?.user || null;
+      } catch {
+        // Continue
+      }
+    }
+
+    if (!authUser && bearerToken) {
+      try {
+        const adminClient = createAdminClient();
+        if (adminClient) {
+          const { data } = await adminClient.auth.getUser(bearerToken);
+          authUser = data?.user || null;
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Authentication required to delete orders.' },
+        { status: 401 }
+      );
+    }
+
+    // Verify Admin Role strictly
+    const dbClient = createAdminClient() || supabaseServer;
+    let isAdmin = false;
+
+    const userEmail = authUser.email?.toLowerCase().trim() || '';
+    if (
+      userEmail === 'alwinabraham420@gmail.com' ||
+      authUser.app_metadata?.role === 'admin' ||
+      authUser.user_metadata?.role === 'admin'
+    ) {
+      isAdmin = true;
+    } else if (dbClient) {
+      const { data: userProfile } = await dbClient
+        .from('users')
+        .select('role')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      if (userProfile?.role === 'admin' || userProfile?.role === 'operator') {
+        isAdmin = true;
+      }
+    }
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden: Admin access required to delete orders.' },
+        { status: 403 }
+      );
+    }
+
+    if (!dbClient) {
+      return NextResponse.json(
+        { error: 'Database client unavailable' },
+        { status: 500 }
+      );
+    }
+
+    // 2. Resolve the actual database order UUID primary key
+    let targetDbId: string | null = null;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+
+    if (isUuid) {
+      const { data: ord } = await dbClient
+        .from('orders')
+        .select('id, order_number')
+        .eq('id', orderId)
+        .maybeSingle();
+      if (ord?.id) {
+        targetDbId = ord.id;
+      }
+    }
+
+    if (!targetDbId) {
+      const { data: ord } = await dbClient
+        .from('orders')
+        .select('id, order_number')
+        .or(`id.eq.${orderId},order_number.eq.${orderId}`)
+        .maybeSingle();
+      if (ord?.id) {
+        targetDbId = ord.id;
+      }
+    }
+
+    // 3. Dependent records cleanup and Order Deletion
+    if (targetDbId) {
+      // Explicitly delete dependent child records in order to ensure clean cascade and avoid orphaned data
+      await dbClient.from('order_status_history').delete().eq('order_id', targetDbId);
+      await dbClient.from('marketing_attribution').delete().eq('order_id', targetDbId);
+      await dbClient.from('supplier_orders').delete().eq('order_id', targetDbId);
+      await dbClient.from('payments').delete().eq('order_id', targetDbId);
+      await dbClient.from('order_items').delete().eq('order_id', targetDbId);
+
+      // Delete the actual order
+      const { error: deleteOrderError } = await dbClient
+        .from('orders')
+        .delete()
+        .eq('id', targetDbId);
+
+      if (deleteOrderError) {
+        console.error('Error deleting order from database:', deleteOrderError);
+        return NextResponse.json({ error: deleteOrderError.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      deletedOrderId: targetDbId || orderId,
+    });
+  } catch (err: any) {
+    console.error('Error in DELETE /api/orders:', err);
+    return NextResponse.json(
+      { error: err.message || 'Server error while deleting order' },
+      { status: 500 }
+    );
+  }
+}
+

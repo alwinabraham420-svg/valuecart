@@ -23,6 +23,7 @@ interface AdminContextType {
   updateOrderStatus: (orderId: string, newStatus: OrderStatus, note?: string) => Promise<void>;
   updateSupplierDetails: (orderId: string, details: Partial<SupplierDetails>) => Promise<void>;
   addOrder: (newOrder: Order) => void;
+  deleteOrder: (orderId: string) => Promise<{ success: boolean; error?: string }>;
   getOrderById: (orderId: string) => Order | undefined;
   updateProduct: (productId: string, updates: Partial<Product>) => void;
   addProduct: (product: Product) => void;
@@ -408,6 +409,46 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
   };
 
+  const deleteOrder = async (orderId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const {
+        data: { session },
+      } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      const token = session?.access_token;
+
+      const res = await fetch('/api/orders', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ orderId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return {
+          success: false,
+          error: data.error || 'Unable to delete this order. Please try again.',
+        };
+      }
+
+      // 1. Immediately remove the order from local state to update UI immediately
+      setOrders((prev) => prev.filter((o) => o.id !== orderId && o.orderNumber !== orderId));
+
+      // 2. Revalidate live orders from database
+      await fetchOrdersFromDb();
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error deleting order:', err);
+      return {
+        success: false,
+        error: err.message || 'Unable to delete this order. Please try again.',
+      };
+    }
+  };
+
   const getOrderById = (orderId: string): Order | undefined => {
     return orders.find((o) => o.id === orderId || o.orderNumber === orderId);
   };
@@ -539,6 +580,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         updateOrderStatus,
         updateSupplierDetails,
         addOrder,
+        deleteOrder,
         getOrderById,
         updateProduct,
         addProduct,
